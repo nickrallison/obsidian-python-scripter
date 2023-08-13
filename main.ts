@@ -70,7 +70,7 @@ export default class MyPlugin extends Plugin {
 						  return;
 						}
 						if (stats.isFile()) {
-							exec(`python ${filePath} ${this.pythonDirectory}`, (error: any, stdout: any, stderr: any) => {
+							exec(`python ${filePath} ${this.pythonDirectory}`, {cwd: this.pythonDirectory}, (error: any, stdout: any, stderr: any) => {
 								if (error) {
 									new Notice(`Error executing script ${filePath}: ${error}`);
 									return;
@@ -81,7 +81,7 @@ export default class MyPlugin extends Plugin {
 						} else if (stats.isDirectory()) {
 							var dir = path.join(filePath);
 							var executable = path.join(".", filePath, "src", "main.py");
-							exec(`python ${executable} ${dir}`, (error: any, stdout: any, stderr: any) => {
+							exec(`python ${executable} ${dir}`, {cwd: dir}, (error: any, stdout: any, stderr: any) => {
 								if (error) {
 									new Notice(`Error executing folder program: ${error}`);
 									return;
