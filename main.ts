@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
 	pythonDirectory: string;
+	pythonDirectoryRelative: string;
 
 	getBasePath(): string {
         let basePath;
@@ -32,19 +33,24 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		var basePath = this.getBasePath();
-		var defaultRelativePath: string = path.join(this.app.vault.configDir, "scripts", "python");
+		var defaultRelativePath: string = path.join(".", this.app.vault.configDir, "scripts", "python");
 		this.pythonDirectory = path.join(basePath, defaultRelativePath);
+		this.pythonDirectoryRelative = defaultRelativePath
 		if (this.settings.pythonPath != "") {
 			this.pythonDirectory = path.join(basePath, this.settings.pythonPath);
+			this.pythonDirectoryRelative = this.settings.pythonPath
 		} else {
 			this.pythonDirectory = path.join(basePath, defaultRelativePath);
+			this.pythonDirectoryRelative = defaultRelativePath
 		}
+		console.log(this.pythonDirectoryRelative)
 		try {
-			this.app.vault.createFolder(this.pythonDirectory);
+			await this.app.vault.createFolder(this.pythonDirectoryRelative);
 			//new Notice(this.pythonDirectory + " created");
 		} catch (error) {
-			new Notice("Error creating " + this.pythonDirectory);
+			//new Notice("Error creating " + this.pythonDirectory);
 		}
+
 
 
 
@@ -57,14 +63,34 @@ export default class MyPlugin extends Plugin {
 				id: "run-"+files[index],
 				name: 'Run '+files[index],
 				callback: () => {
-					exec(`python ${filePath}`, (error: any, stdout: any, stderr: any) => {
-						if (error) {
-							new Notice(`Error executing Python script: ${error}`);
-							return;
+					fs.stat(filePath, (err: any, stats: { isFile: () => any; isDirectory: () => any; }) => {
+						console.log(stats)
+						if (err) {
+						  console.error(err);
+						  return;
 						}
-					  
-						new Notice(`Python script ` +  fileName + ` output:\n${stdout}`);
-					});
+						if (stats.isFile()) {
+							exec(`python ${filePath} ${this.pythonDirectory}`, (error: any, stdout: any, stderr: any) => {
+								if (error) {
+									new Notice(`Error executing script ${filePath}: ${error}`);
+									return;
+								}
+							  
+								new Notice(`Script ` +  fileName + ` output:\n${stdout}`);
+							});
+						} else if (stats.isDirectory()) {
+							var dir = path.join(filePath);
+							var executable = path.join(".", filePath, "src", "main.py");
+							exec(`python ${executable} ${dir}`, (error: any, stdout: any, stderr: any) => {
+								if (error) {
+									new Notice(`Error executing folder program: ${error}`);
+									return;
+								}
+								new Notice(`Script ` +  fileName + ` output:\n${stdout}`);
+							});
+						}
+					  });
+				
 				}
 			}
 			this.addCommand(obsidianCommand);
@@ -72,14 +98,9 @@ export default class MyPlugin extends Plugin {
 
 
 
+
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
@@ -129,7 +150,7 @@ class SampleSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Python Script Path')
-			.setDesc('Defaults to config\\scripts\\python')
+			.setDesc('Defaults to .obsidian\\scripts\\python')
 			.addText(text => text
 				.setPlaceholder('Enter path')
 				.setValue(this.plugin.settings.pythonPath)
