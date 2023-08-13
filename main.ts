@@ -59,18 +59,18 @@ export default class MyPlugin extends Plugin {
 		for (var index = 0; index < files.length; index++) {
 			const filePath = path.join(this.pythonDirectory, files[index]);
 			const fileName = files[index];
+			const basePath = this.getBasePath();
 			const obsidianCommand = {
 				id: "run-"+files[index],
 				name: 'Run '+files[index],
 				callback: () => {
 					fs.stat(filePath, (err: any, stats: { isFile: () => any; isDirectory: () => any; }) => {
-						console.log(stats)
 						if (err) {
 						  console.error(err);
 						  return;
 						}
 						if (stats.isFile()) {
-							exec(`python ${filePath} ${this.pythonDirectory}`, {cwd: this.pythonDirectory}, (error: any, stdout: any, stderr: any) => {
+							exec(`python ${filePath} ${basePath}`, {cwd: this.pythonDirectory}, (error: any, stdout: any, stderr: any) => {
 								if (error) {
 									new Notice(`Error executing script ${filePath}: ${error}`);
 									return;
@@ -81,12 +81,12 @@ export default class MyPlugin extends Plugin {
 						} else if (stats.isDirectory()) {
 							var dir = path.join(filePath);
 							var executable = path.join(".", filePath, "src", "main.py");
-							exec(`python ${executable} ${dir}`, {cwd: dir}, (error: any, stdout: any, stderr: any) => {
+							exec(`python ${executable} ${basePath}`, {cwd: dir}, (error: any, stdout: any, stderr: any) => {
 								if (error) {
 									new Notice(`Error executing folder program: ${error}`);
 									return;
 								}
-								new Notice(`Script ` +  fileName + ` output:\n${stdout}`);
+								new Notice(`Script ` +  fileName + " " + basePath + ` output:\n${stdout}`);
 							});
 						}
 					  });
