@@ -2,13 +2,13 @@
 
 ## Summary 
 
-This is a program to quickly allow you to run your own Python scripts from inside Obsidian. To get started enable this plugin, it will create a plugins/python folder inside your designated .obsidian folder. For each script it will add a custom command to the obsidian commands panel.
+This is a program to quickly allow you to run your own Python scripts from inside Obsidian. To get started enable this plugin, it will create a scripts/python folder inside your designated .obsidian folder. For each script it will add a custom command to the obsidian commands panel.
 
 ## Requirements
 
-- Install your preferred version of python and make sure it functions from the command line eg: ```python .obsidian/plugins/python/main.py```
-- This plugin works with naked python scripts eg. plugins/python/example.py
-- Or you may want a more complicated script. If your python script needs multiple modules make sure to structure it as follows
+- Install your preferred version of python and make sure it functions from the command line eg: ```python .obsidian/scripts/python/main.py```
+- This plugin works with naked python scripts eg. scripts/python/example.py
+- Or you may want a more complicated script. You need to have a main.py file inside of a src folder for it to function as a command, otherwise it will not be able to execute. Make sure to structure the scripts/python as follows
 <pre>
   plugins
     |
@@ -22,8 +22,6 @@ This is a program to quickly allow you to run your own Python scripts from insid
                         |
                         ---- hello.py
 </pre>
-
-- You need to have a main.py file inside of a src folder for it to function as a command, otherwise it will not be able to execute.
 
    Your resulting plugins folder should have a structure like the following:
   <pre>
