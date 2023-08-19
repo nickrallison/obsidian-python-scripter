@@ -6,16 +6,16 @@ const { exec } = require('child_process');
 
 
 
-interface MyPluginSettings {
+interface PythonScripterSettings {
 	pythonPath: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: PythonScripterSettings = {
 	pythonPath: ""
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class PythonScripterPlugin extends Plugin {
+	settings: PythonScripterSettings;
 	pythonDirectory: string;
 	pythonDirectoryRelative: string;
 
@@ -100,7 +100,7 @@ export default class MyPlugin extends Plugin {
 
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new PythonScripterSettingTab(this.app, this));
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
@@ -135,10 +135,10 @@ class SampleModal extends Modal {
 	}
 }
 
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+class PythonScripterSettingTab extends PluginSettingTab {
+	plugin: PythonScripterPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: PythonScripterPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
