@@ -1,4 +1,4 @@
-# Obsidian Python Scripting
+# Obsidian Python Scripter
 
 ## Summary 
 
