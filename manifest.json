@@ -3,9 +3,9 @@
 	"name": "Python Scripter",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "This is a program that adds a command for each python file (or folder with a main.py in the future)",
+	"description": "This is a program that adds a command for each python file or folder with a src/main.py file",
 	"author": "Nick Allison",
 	"authorUrl": "https://github.com/nickrallison",
-	"fundingUrl": "NA",
+	"fundingUrl": "https://github.com/sponsors/nickrallison",
 	"isDesktopOnly": true
 }
