@@ -23,7 +23,7 @@ This is a program to quickly allow you to run your own Python scripts from insid
                         ---- hello.py
 </pre>
 
-   Your resulting plugins folder should have a structure like the following:
+   Your resulting scripts folder should have a structure like the following:
   <pre>
   scripts
     | 
@@ -44,3 +44,6 @@ This is a program to quickly allow you to run your own Python scripts from insid
 
  - Add your python scripts in the format specified in the requirements section.
  - Once Obsidian starts, your commands will be added to the commands window and can be run as you would like.
+ - In the above example, there would be 2 commands added:
+ 	- Run example
+  	- Run example2.py
