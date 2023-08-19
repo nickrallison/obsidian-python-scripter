@@ -119,22 +119,6 @@ export default class PythonScripterPlugin extends Plugin {
 	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
 class PythonScripterSettingTab extends PluginSettingTab {
 	plugin: PythonScripterPlugin;
 
