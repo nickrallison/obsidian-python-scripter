@@ -47,3 +47,6 @@ This is a program to quickly allow you to run your own Python scripts from insid
  - In the above example, there would be 2 commands added:
  	- Run example
   	- Run example2.py
+
+   ![commandwindow](https://github.com/nickrallison/obsidian-python-scripter/assets/99363282/3fcf9fa0-451a-4f55-af9d-ba8d57af92ee)
+
