@@ -23,7 +23,7 @@ This is a program to quickly allow you to run your own Python scripts from insid
                         ---- hello.py
 </pre>
 
-	- You need to have a main.py file inside of a src folder for it to function as a command, otherwise it will not be able to execute.
+- You need to have a main.py file inside of a src folder for it to function as a command, otherwise it will not be able to execute.
 
    Your resulting plugins folder should have a structure like the following:
   <pre>
