@@ -26,19 +26,19 @@ This is a program to quickly allow you to run your own Python scripts from insid
 
    Your resulting plugins folder should have a structure like the following:
   
-    plugins
-    |
-    ---- python
-           |
-           ---- example
-           |       |
-           |       ---- src
-           |             |
-           |             ---- main.py
-           |             |
-           |             ---- hello.py
-           |
-           ---- example2.py
+    plugins <br />
+    | <br />
+    ---- python <br />
+           | <br />
+           ---- example <br />
+           |       | <br />
+           |       ---- src <br />
+           |             | <br />
+           |             ---- main.py <br />
+           |             | <br />
+           |             ---- hello.py <br />
+           | <br />
+           ---- example2.py <br />
 
  ## Directions
 
