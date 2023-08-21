@@ -1,9 +1,7 @@
 import { App, Editor, FileSystemAdapter, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-var path = require('path');
-var fs = require('fs');
-const { exec } = require('child_process');
-// Remember to rename these classes and interfaces!
-
+import * as path from 'path';
+import * as fs from 'fs';
+import { exec } from 'child_process';
 
 
 interface PythonScripterSettings {
@@ -51,11 +49,7 @@ export default class PythonScripterPlugin extends Plugin {
 			//new Notice("Error creating " + this.pythonDirectory);
 		}
 
-
-
-
-
-		var files: [string] = fs.readdirSync(this.pythonDirectory);
+		var files: string[] = fs.readdirSync(this.pythonDirectory);
 		for (var index = 0; index < files.length; index++) {
 			const filePath = path.join(this.pythonDirectory, files[index]);
 			const fileName = files[index];
@@ -96,14 +90,9 @@ export default class PythonScripterPlugin extends Plugin {
 			this.addCommand(obsidianCommand);
 		} 
 
-
-
-
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new PythonScripterSettingTab(this.app, this));
 
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 
 	onunload() {
