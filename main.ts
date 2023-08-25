@@ -68,27 +68,27 @@ export default class PythonScripterPlugin extends Plugin {
 							if (local_current_file_path === undefined) {
 								local_current_file_path = "";
 							}
-							var abs_current_file_path = path.join(basePath, local_current_file_path);
-							exec(`python ${filePath} ${basePath} ${abs_current_file_path}`, {cwd: this.pythonDirectory}, (error: any, stdout: any, stderr: any) => {
+							exec(`python ${filePath} ${basePath} ${local_current_file_path.replace(/ /g, '\\ ')}`, {cwd: this.pythonDirectory}, (error: any, stdout: any, stderr: any) => {
 								if (error) {
 									new Notice(`Error executing script ${filePath}: ${error}`);
 									return;
 								}
 								new Notice(`Script ` +  fileName + ` output:\n${stdout}`);
 							});
-						} else if (stats.isDirectory()) {
+						} else if (stats.isDirectory()) { 
 							var dir = path.join(filePath);
 							var executable = path.join(".", filePath, "src", "main.py");
 							var  local_current_file_path = this.app.workspace.activeEditor?.file?.path;
 							if (local_current_file_path === undefined) {
 								local_current_file_path = "";
 							}
-							var abs_current_file_path = path.join(basePath, local_current_file_path);
-							exec(`python ${executable} ${basePath} ${abs_current_file_path}`, {cwd: dir}, (error: any, stdout: any, stderr: any) => {
+							console.log(`python ${filePath} ${basePath} ${local_current_file_path.replace(/ /g, '\\ ')}`)
+							exec(`python ${path.join(filePath, "src", "main.py")} ${basePath} ${local_current_file_path.replace(/ /g, '\\ ')}`, {cwd: dir}, (error: any, stdout: any, stderr: any) => {
 								if (error) {
 									new Notice(`Error executing folder program: ${error}`);
 									return;
 								}
+								new Notice(`output:\n${local_current_file_path}`);
 								new Notice(`Script ` +  fileName + " " + basePath + ` output:\n${stdout}`);
 							});
 						}
