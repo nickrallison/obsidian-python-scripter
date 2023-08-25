@@ -68,7 +68,7 @@ export default class PythonScripterPlugin extends Plugin {
 							if (local_current_file_path === undefined) {
 								local_current_file_path = "";
 							}
-							exec(`python ${filePath} ${basePath} ${local_current_file_path.replace(/ /g, '\\ ')}`, {cwd: this.pythonDirectory}, (error: any, stdout: any, stderr: any) => {
+							exec(`python ${filePath} ${basePath} \"${local_current_file_path}\"`, {cwd: this.pythonDirectory}, (error: any, stdout: any, stderr: any) => {
 								if (error) {
 									new Notice(`Error executing script ${filePath}: ${error}`);
 									return;
@@ -82,13 +82,11 @@ export default class PythonScripterPlugin extends Plugin {
 							if (local_current_file_path === undefined) {
 								local_current_file_path = "";
 							}
-							console.log(`python ${filePath} ${basePath} ${local_current_file_path.replace(/ /g, '\\ ')}`)
-							exec(`python ${path.join(filePath, "src", "main.py")} ${basePath} ${local_current_file_path.replace(/ /g, '\\ ')}`, {cwd: dir}, (error: any, stdout: any, stderr: any) => {
+							exec(`python ${path.join(filePath, "src", "main.py")} ${basePath} \"${local_current_file_path}\"`, {cwd: dir}, (error: any, stdout: any, stderr: any) => {
 								if (error) {
 									new Notice(`Error executing folder program: ${error}`);
 									return;
 								}
-								new Notice(`output:\n${local_current_file_path}`);
 								new Notice(`Script ` +  fileName + " " + basePath + ` output:\n${stdout}`);
 							});
 						}
