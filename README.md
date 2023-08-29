@@ -57,6 +57,21 @@ e.g. ```python \Users\nick\Documents\Vault\.obsidian\scripts\python\main.py \Use
 
 These can be used by the script as liked.
 
+Here is a starting point for a python script: main.py
+
+```
+import sys
+import os
+
+python_script = sys.argv[0]
+file_path = sys.argv[2]
+vault_path = sys.argv[1]
+
+abs_file_path = os.path.abspath(os.path.join(vault_path, file_path))
+
+print(f"This is the open file: {abs_file_path}")
+```
+
 ## TODO
 
 - Auto reload when python dir is updated
