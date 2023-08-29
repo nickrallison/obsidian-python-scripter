@@ -53,7 +53,7 @@ This is a program to quickly allow you to run your own Python scripts from insid
  ## Script Direction
 
 The script passes 2 arguments to the script, argument 1 is the absolute path to the obsidian root folder, argument 2 is the path to the open file if it is open, otherwise an empty path is sent
-e.g. ```python \Users\nick\Documents\Vault\.obsidian\scripts\python\main.py \Users\nick\Documents\Vault \Users\nick\Documents\Vault\file1.md```
+e.g. ```python \Users\nick\Documents\Vault\.obsidian\scripts\python\main.py \Users\nick\Documents\Vault dir1\file1.md```
 
 These can be used by the script as liked.
 
