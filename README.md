@@ -59,7 +59,8 @@ These can be used by the script as liked.
 
 Here is a starting point for a python script: main.py
 
-```
+```python
+# main.py
 import sys
 import os
 
