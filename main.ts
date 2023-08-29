@@ -57,7 +57,7 @@ export default class PythonScripterPlugin extends Plugin {
 			const obsidianCommand = {
 				id: "run-"+files[index],
 				name: 'Run '+files[index],
-				callback: (editor: Editor) => {
+				callback: () => {
 					fs.stat(filePath, (err: any, stats: { isFile: () => any; isDirectory: () => any; }) => {
 						if (err) {
 						  console.error(err);
