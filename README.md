@@ -40,7 +40,7 @@ This is a program to quickly allow you to run your own Python scripts from insid
            ---- example2.py 
 </pre>
 
- ## Directions
+ ## Obsidian Directions 
 
  - Add your python scripts in the format specified in the requirements section.
  - Once Obsidian starts, your commands will be added to the commands window and can be run as you would like.
@@ -48,7 +48,14 @@ This is a program to quickly allow you to run your own Python scripts from insid
  	- Run example
   	- Run example2.py
 
-   ![commandwindow](https://github.com/nickrallison/obsidian-python-scripter/assets/99363282/3fcf9fa0-451a-4f55-af9d-ba8d57af92ee)
+![commandwindow](https://github.com/nickrallison/obsidian-python-scripter/assets/99363282/3fcf9fa0-451a-4f55-af9d-ba8d57af92ee)
+  
+ ## Script Direction
+
+The script passes 2 arguments to the script, argument 1 is the absolute path to the obsidian root folder, argument 2 is the path to the open file if it is open, otherwise an empty path is sent
+e.g. python \Users\nick\Documents\Vault\.obsidian\scripts\python\main.py \Users\nick\Documents\Vault \Users\nick\Documents\Vault\file1.md
+
+These can be used by the script as liked.
 
 ## TODO
 
