@@ -43,7 +43,7 @@ This is a program to quickly allow you to run your own Python scripts from insid
  ## Obsidian Directions 
 
  - Add your python scripts in the format specified in the requirements section.
- - Once Obsidian starts, your commands will be added to the commands window and can be run as you would like.
+ - Once Obsidian starts (or restarts if already open), your commands will be added to the commands window and can be run as you would like.
  - In the above example, there would be 2 commands added:
  	- Run example
   	- Run example2.py
