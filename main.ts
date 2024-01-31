@@ -6,10 +6,12 @@ import { exec } from 'child_process';
 
 interface PythonScripterSettings {
 	pythonPath: string;
+	pythonExe: string;
 }
 
 const DEFAULT_SETTINGS: PythonScripterSettings = {
-	pythonPath: ""
+	pythonPath: "",
+	pythonExe: ""
 }
 
 export default class PythonScripterPlugin extends Plugin {
@@ -63,28 +65,35 @@ export default class PythonScripterPlugin extends Plugin {
 						  console.error(err);
 						  return;
 						}
+						let python_exe = "python";	
+						if (this.settings.pythonExe != "") {
+							python_exe = this.settings.pythonExe
+						}
 						if (stats.isFile()) {
 							var  local_current_file_path = this.app.workspace.activeEditor?.file?.path;
 							if (local_current_file_path === undefined) {
 								local_current_file_path = "";
 							}
-							exec(`python \"${filePath}\" \"${basePath}\" \"${local_current_file_path}\"`, {cwd: this.pythonDirectory}, (error: any, stdout: any, stderr: any) => {
+					
+
+							exec(`${python_exe} \"${filePath}\" \"${basePath}\" \"${local_current_file_path}\"`, {cwd: this.pythonDirectory}, (error: any, stdout: any, stderr: any) => {
 								if (error) {
 									new Notice(`Error executing script ${filePath}: ${error}`);
+									console.log(`Error executing script ${filePath}: ${error}`)
 									return;
 								}
 								new Notice(`Script ` +  fileName + ` output:\n${stdout}`);
 							});
 						} else if (stats.isDirectory()) { 
 							var dir = path.join(filePath);
-							var executable = path.join(".", filePath, "src", "main.py");
 							var  local_current_file_path = this.app.workspace.activeEditor?.file?.path;
 							if (local_current_file_path === undefined) {
 								local_current_file_path = "";
 							}
-							exec(`python \"${path.join(filePath, "src", "main.py")}\" \"${basePath}\" \"${local_current_file_path}\"`, {cwd: dir}, (error: any, stdout: any, stderr: any) => {
+							exec(`${python_exe} \"${path.join(filePath, "src", "main.py")}\" \"${basePath}\" \"${local_current_file_path}\"`, {cwd: dir}, (error: any, stdout: any, stderr: any) => {
 								if (error) {
 									new Notice(`Error executing folder program: ${error}`);
+									console.log(`Error executing folder program: ${error}`)
 									return;
 								}
 								new Notice(`Script ` +  fileName + " " + basePath + ` output:\n${stdout}`);
@@ -136,6 +145,16 @@ class PythonScripterSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.pythonPath)
 				.onChange(async (value) => {
 					this.plugin.settings.pythonPath = value;
+					await this.plugin.saveSettings();
+				}));
+		new Setting(containerEl)
+			.setName('Python Executable')
+			.setDesc('Defaults to python')
+			.addText(text => text
+				.setPlaceholder('Enter path or command')
+				.setValue(this.plugin.settings.pythonExe)
+				.onChange(async (value) => {
+					this.plugin.settings.pythonExe = value;
 					await this.plugin.saveSettings();
 				}));
 	}

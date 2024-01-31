@@ -74,6 +74,10 @@ abs_file_path = os.path.abspath(os.path.join(vault_path, file_path))
 print(f"This is the open file: {abs_file_path}")
 ```
 
-## TODO
+## Settings
 
-- Auto reload when python dir is updated
+You have the ability to change the python script location in settings. Additionally you have the ability to change which python executable is used.
+
+## Debugging
+
+If your script fails to run. An error is shown in the top right of obsidian and in the *developer console* which can be found with the following  hotkeys: "ctrl" + "shift" + "i" on Windows, or "cmd" + "option" + "i" on MacOS
