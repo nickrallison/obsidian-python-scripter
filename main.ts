@@ -7,13 +7,13 @@ import { exec } from 'child_process';
 interface PythonScripterSettings {
 	pythonPath: string;
 	pythonExe: string;
-	useLastFile: boolean;
+	// useLastFile: boolean;
 }
 
 const DEFAULT_SETTINGS: PythonScripterSettings = {
 	pythonPath: "",
 	pythonExe: "",
-	useLastFile: false
+	// useLastFile: false
 }
 
 export default class PythonScripterPlugin extends Plugin {
@@ -72,13 +72,19 @@ export default class PythonScripterPlugin extends Plugin {
 							python_exe = this.settings.pythonExe
 						}
 						if (stats.isFile()) {
-							var  local_current_file_path = this.app.workspace.activeEditor?.file?.path;
-							if (this.settings.useLastFile) {
-								local_current_file_path = this.app.workspace.lastActiveFile?.path;
-							}
+							// var  local_current_file_path = this.app.workspace.activeEditor?.file?.path;
+							var  local_current_file_path = this.app.workspace.getActiveFile()?.name?.toString();
 							if (local_current_file_path === undefined) {
+								// local_current_file_path = "";
 								local_current_file_path = "";
 							}
+							// if (this.settings.useLastFile) {
+							// 	local_current_file_path = this.app.workspace.getActiveFile()?.name?.toString();
+							// }
+							// else {
+							// 	local_current_file_path = this.app.workspace.activeEditor?.file?.path;
+							// }
+
 					
 
 							exec(`${python_exe} \"${filePath}\" \"${basePath}\" \"${local_current_file_path}\"`, {cwd: this.pythonDirectory}, (error: any, stdout: any, stderr: any) => {
@@ -162,14 +168,14 @@ class PythonScripterSettingTab extends PluginSettingTab {
 					this.plugin.settings.pythonExe = value;
 					await this.plugin.saveSettings();
 				}));
-		new Setting(containerEl)
-			.setName('Use Last File')
-			.setDesc('Run the script on the last file that was opened. This make it possible to run it on other file types e.g. pdf.')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.useLastFile)
-				.onChange(async (value) => {
-					this.plugin.settings.useLastFile = value;
-					await this.plugin.saveSettings();
-				}));
+		// new Setting(containerEl)
+		// 	.setName('Use Last File')
+		// 	.setDesc('Run the script on the last file that was opened. This make it possible to run it on other file types e.g. pdf.')
+		// 	.addToggle(toggle => toggle
+		// 		.setValue(this.plugin.settings.useLastFile)
+		// 		.onChange(async (value) => {
+		// 			this.plugin.settings.useLastFile = value;
+		// 			await this.plugin.saveSettings();
+		// 		}));
 	}
 }
