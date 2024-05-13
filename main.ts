@@ -22,15 +22,15 @@ export default class PythonScripterPlugin extends Plugin {
 	pythonDirectoryRelative: string;
 
 	getBasePath(): string {
-        let basePath;
-        // base path
-        if (this.app.vault.adapter instanceof FileSystemAdapter) {
-            basePath = this.app.vault.adapter.getBasePath();
-        } else {
-            throw new Error('Cannot determine base path.');
-        }
-        return `${basePath}`;
-    }
+		let basePath;
+		// base path
+		if (this.app.vault.adapter instanceof FileSystemAdapter) {
+			basePath = this.app.vault.adapter.getBasePath();
+		} else {
+			throw new Error('Cannot determine base path.');
+		}
+		return `${basePath}`;
+	}
 
 	async onload() {
 		await this.loadSettings();
@@ -59,21 +59,21 @@ export default class PythonScripterPlugin extends Plugin {
 			const fileName = files[index];
 			const basePath = this.getBasePath();
 			const obsidianCommand = {
-				id: "run-"+files[index],
-				name: 'Run '+files[index],
+				id: "run-" + files[index],
+				name: 'Run ' + files[index],
 				callback: () => {
 					fs.stat(filePath, (err: any, stats: { isFile: () => any; isDirectory: () => any; }) => {
 						if (err) {
-						  console.error(err);
-						  return;
+							console.error(err);
+							return;
 						}
-						let python_exe = "python";	
+						let python_exe = "python";
 						if (this.settings.pythonExe != "") {
 							python_exe = this.settings.pythonExe
 						}
 						if (stats.isFile()) {
 							// var  local_current_file_path = this.app.workspace.activeEditor?.file?.path;
-							var  local_current_file_path = this.app.workspace.getActiveFile()?.name?.toString();
+							var local_current_file_path = this.app.workspace.getActiveFile()?.path?.toString();
 							if (local_current_file_path === undefined) {
 								// local_current_file_path = "";
 								local_current_file_path = "";
@@ -85,37 +85,37 @@ export default class PythonScripterPlugin extends Plugin {
 							// 	local_current_file_path = this.app.workspace.activeEditor?.file?.path;
 							// }
 
-					
 
-							exec(`${python_exe} \"${filePath}\" \"${basePath}\" \"${local_current_file_path}\"`, {cwd: this.pythonDirectory}, (error: any, stdout: any, stderr: any) => {
+
+							exec(`${python_exe} \"${filePath}\" \"${basePath}\" \"${local_current_file_path}\"`, { cwd: this.pythonDirectory }, (error: any, stdout: any, stderr: any) => {
 								if (error) {
 									new Notice(`Error executing script ${filePath}: ${error}`);
 									console.log(`Error executing script ${filePath}: ${error}`)
 									return;
 								}
-								new Notice(`Script ` +  fileName + ` output:\n${stdout}`);
+								new Notice(`Script ` + fileName + ` output:\n${stdout}`);
 							});
-						} else if (stats.isDirectory()) { 
+						} else if (stats.isDirectory()) {
 							var dir = path.join(filePath);
-							var  local_current_file_path = this.app.workspace.activeEditor?.file?.path;
+							var local_current_file_path = this.app.workspace.activeEditor?.file?.path;
 							if (local_current_file_path === undefined) {
 								local_current_file_path = "";
 							}
-							exec(`${python_exe} \"${path.join(filePath, "src", "main.py")}\" \"${basePath}\" \"${local_current_file_path}\"`, {cwd: dir}, (error: any, stdout: any, stderr: any) => {
+							exec(`${python_exe} \"${path.join(filePath, "src", "main.py")}\" \"${basePath}\" \"${local_current_file_path}\"`, { cwd: dir }, (error: any, stdout: any, stderr: any) => {
 								if (error) {
 									new Notice(`Error executing folder program: ${error}`);
 									console.log(`Error executing folder program: ${error}`)
 									return;
 								}
-								new Notice(`Script ` +  fileName + " " + basePath + ` output:\n${stdout}`);
+								new Notice(`Script ` + fileName + " " + basePath + ` output:\n${stdout}`);
 							});
 						}
-					  });
-				
+					});
+
 				}
 			}
 			this.addCommand(obsidianCommand);
-		} 
+		}
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new PythonScripterSettingTab(this.app, this));
@@ -144,7 +144,7 @@ class PythonScripterSettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
 
