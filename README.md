@@ -76,8 +76,8 @@ print(f"This is the open file: {abs_file_path}")
 
 ## Settings
 
-You have the ability to change the python script location in settings. Additionally you have the ability to change which python executable is used.
+You have the ability to change the default python script location in settings. Additionally you have the ability to change the default python executable, or can configure python executables per script if you would like to use virtual environments. i.e. Python Exe: C:\Users\nickr\Documents\Projects\Scratch\.venv\Scripts\python.exe
 
 ## Debugging
 
-If your script fails to run. An error is shown in the top right of obsidian and in the *developer console* which can be found with the following  hotkeys: "ctrl" + "shift" + "i" on Windows, or "cmd" + "option" + "i" on MacOS
+If your script fails to run. An error is shown in the top right of obsidian and in the *developer console* which can be found with the following  hotkeys: "ctrl" + "shift" + "i" on Windows, or "cmd" + "option" + "i" on MacOS.

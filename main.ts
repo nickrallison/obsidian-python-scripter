@@ -7,12 +7,14 @@ import { exec } from 'child_process';
 interface PythonScripterSettings {
 	pythonPath: string;
 	pythonExe: string;
+	pythonIndividualExes: { [index: string]: any };
 	// useLastFile: boolean;
 }
 
 const DEFAULT_SETTINGS: PythonScripterSettings = {
 	pythonPath: "",
 	pythonExe: "",
+	pythonIndividualExes: {},
 	// useLastFile: false
 }
 
@@ -67,10 +69,24 @@ export default class PythonScripterPlugin extends Plugin {
 							console.error(err);
 							return;
 						}
-						let python_exe = "python";
+						let python_exe = "";
 						if (this.settings.pythonExe != "") {
 							python_exe = this.settings.pythonExe
 						}
+						else {
+							python_exe = "python"
+						}
+
+						if (fileName in this.settings.pythonIndividualExes) {
+							python_exe = this.settings.pythonIndividualExes[fileName];
+							if (!fs.existsSync(this.settings.pythonIndividualExes[fileName])) {
+								new Notice(`Python Exe: ${this.settings.pythonIndividualExes[fileName]} for ${fileName} does not exist`)
+								console.log(`Python Exe: ${this.settings.pythonIndividualExes[fileName]} for ${fileName} does not exist`)
+								return;
+							}
+
+						}
+						console.log(`Python Exe: ${python_exe}`)
 						if (stats.isFile()) {
 							// var  local_current_file_path = this.app.workspace.activeEditor?.file?.path;
 							var local_current_file_path = this.app.workspace.getActiveFile()?.path?.toString();
@@ -78,12 +94,6 @@ export default class PythonScripterPlugin extends Plugin {
 								// local_current_file_path = "";
 								local_current_file_path = "";
 							}
-							// if (this.settings.useLastFile) {
-							// 	local_current_file_path = this.app.workspace.getActiveFile()?.name?.toString();
-							// }
-							// else {
-							// 	local_current_file_path = this.app.workspace.activeEditor?.file?.path;
-							// }
 
 
 
@@ -94,6 +104,7 @@ export default class PythonScripterPlugin extends Plugin {
 									return;
 								}
 								new Notice(`Script ` + fileName + ` output:\n${stdout}`);
+								console.log(`Script ` + fileName + ` output:\n${stdout}`)
 							});
 						} else if (stats.isDirectory()) {
 							var dir = path.join(filePath);
@@ -108,6 +119,7 @@ export default class PythonScripterPlugin extends Plugin {
 									return;
 								}
 								new Notice(`Script ` + fileName + " " + basePath + ` output:\n${stdout}`);
+								console.log(`Script ` + fileName + " " + basePath + ` output:\n${stdout}`)
 							});
 						}
 					});
@@ -118,7 +130,7 @@ export default class PythonScripterPlugin extends Plugin {
 		}
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new PythonScripterSettingTab(this.app, this));
+		this.addSettingTab(new PythonScripterSettingTab(this.app, this, files));
 
 	}
 
@@ -137,10 +149,12 @@ export default class PythonScripterPlugin extends Plugin {
 
 class PythonScripterSettingTab extends PluginSettingTab {
 	plugin: PythonScripterPlugin;
+	files: string[];
 
-	constructor(app: App, plugin: PythonScripterPlugin) {
+	constructor(app: App, plugin: PythonScripterPlugin, files: string[]) {
 		super(app, plugin);
 		this.plugin = plugin;
+		this.files = files
 	}
 
 	display(): void {
@@ -159,7 +173,7 @@ class PythonScripterSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 		new Setting(containerEl)
-			.setName('Python Executable')
+			.setName('Default Python Executable')
 			.setDesc('Defaults to python')
 			.addText(text => text
 				.setPlaceholder('Enter path or command')
@@ -168,14 +182,21 @@ class PythonScripterSettingTab extends PluginSettingTab {
 					this.plugin.settings.pythonExe = value;
 					await this.plugin.saveSettings();
 				}));
-		// new Setting(containerEl)
-		// 	.setName('Use Last File')
-		// 	.setDesc('Run the script on the last file that was opened. This make it possible to run it on other file types e.g. pdf.')
-		// 	.addToggle(toggle => toggle
-		// 		.setValue(this.plugin.settings.useLastFile)
-		// 		.onChange(async (value) => {
-		// 			this.plugin.settings.useLastFile = value;
-		// 			await this.plugin.saveSettings();
-		// 		}));
+
+		for (var index = 0; index < this.files.length; index++) {
+			let file = this.files[index];
+			new Setting(containerEl)
+				.setName(`${file} Python Executable`)
+				.setDesc(`Overides the default python executable for ${file}`)
+				.addTextArea((area) => {
+					area
+						.setValue(this.plugin.settings.pythonIndividualExes[file])
+						.onChange(async (value) => {
+							this.plugin.settings.pythonIndividualExes[file] = value;
+							await this.plugin.saveSettings();
+						});
+				});
+		}
 	}
+
 }
