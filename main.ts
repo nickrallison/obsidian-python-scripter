@@ -11,6 +11,7 @@ interface PythonScripterSettings {
 	passVaultPath: { [index: string]: boolean };
 	passCurrentFile: { [index: string]: boolean };
 	additionalArgs: { [index: string]: string[] };
+	dotFiles: { [index: string]: string };
 	// useLastFile: boolean;
 }
 
@@ -21,6 +22,7 @@ const DEFAULT_SETTINGS: PythonScripterSettings = {
 	passVaultPath: {},
 	passCurrentFile: {},
 	additionalArgs: {},
+	dotFiles: {}
 	// useLastFile: false
 }
 
@@ -75,6 +77,29 @@ export default class PythonScripterPlugin extends Plugin {
 							return;
 						}
 
+						// Fixing relative paths
+						let dot_files = this.settings.dotFiles[fileName];
+						if (dot_files != undefined && !path.isAbsolute(dot_files)) {
+							dot_files = path.join(basePath, dot_files);
+						}
+
+						// Setting Environment Variables
+						if (fileName in this.settings.dotFiles) {
+							if (!fs.existsSync(dot_files)) {
+								new Notice(`Error: ${dot_files} does not exist`)
+								console.log(`Error: ${dot_files} does not exist`)
+								return;
+							}
+							let dotFile = fs.readFileSync(dot_files, 'utf8');
+							let lines = dotFile.split("\n");
+							for (var i = 0; i < lines.length; i++) {
+								let line = lines[i].split("=");
+								if (line.length == 2) {
+									process.env[line[0]] = line[1];
+								}
+							}
+						}
+
 						// Getting Executable
 						let python_exe = "";
 						if (this.settings.pythonExe != "") {
@@ -109,11 +134,23 @@ export default class PythonScripterPlugin extends Plugin {
 						}
 
 						// Getting Arguments
+						let get_vault_path = true;
+						let get_file_path = true;
+						if (this.settings.passVaultPath[fileName] === undefined) {
+							this.settings.passVaultPath[fileName] = true;
+							get_vault_path = true;
+							this.saveSettings();
+						}
+						if (this.settings.passCurrentFile[fileName] === undefined) {
+							this.settings.passCurrentFile[fileName] = true;
+							get_file_path = true;
+							this.saveSettings();
+						}
 						var args = [];
-						if (this.settings.passVaultPath[fileName]) {
+						if (get_vault_path) {
 							args.push(basePath);
 						}
-						if (this.settings.passCurrentFile[fileName]) {
+						if (get_file_path) {
 							var local_current_file_path = this.app.workspace.getActiveFile()?.path?.toString();
 							if (!(local_current_file_path === undefined)) {
 								args.push(local_current_file_path);
@@ -121,16 +158,17 @@ export default class PythonScripterPlugin extends Plugin {
 								args.push("");
 							}
 						}
+						if (this.settings.additionalArgs[fileName] === undefined) {
+							this.settings.additionalArgs[fileName] = [];
+						}
 						for (var i = 0; i < this.settings.additionalArgs[fileName].length; i++) {
 							args.push(this.settings.additionalArgs[fileName][i]);
 						}
-
 						// Running the script
 						let command = `${python_exe} \"${main_file}\"`;
 						for (var i = 0; i < args.length; i++) {
 							command += ` \"${args[i]}\"`;
 						}
-
 						exec(command, { cwd: this.pythonDirectory }, (error: any, stdout: any, stderr: any) => {
 							if (error) {
 								new Notice(`Error executing script ${filePath}: ${error}`);
@@ -203,6 +241,9 @@ class PythonScripterSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 		this.containerEl.createEl("h1", { text: `Scripts` });
+		// Create an area with preable information
+		this.containerEl.createEl("p", { text: `Use the following areas to set settings per script, paths provided may either be absolute or relative to the vault path.` });
+
 		for (var index = 0; index < this.files.length; index++) {
 			let file = this.files[index];
 			if (!(file in this.plugin.settings.passVaultPath)) {
@@ -220,6 +261,17 @@ class PythonScripterSettingTab extends PluginSettingTab {
 						.setValue(this.plugin.settings.pythonIndividualExes[file])
 						.onChange(async (value) => {
 							this.plugin.settings.pythonIndividualExes[file] = value;
+							await this.plugin.saveSettings();
+						});
+				});
+			new Setting(containerEl)
+				.setName(`${file} .env File`)
+				.setDesc(`Provides Runtime Environment Variables for ${file}`)
+				.addTextArea((area) => {
+					area
+						.setValue(this.plugin.settings.dotFiles[file])
+						.onChange(async (value) => {
+							this.plugin.settings.dotFiles[file] = value;
 							await this.plugin.saveSettings();
 						});
 				});
