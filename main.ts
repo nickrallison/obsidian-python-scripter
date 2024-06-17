@@ -12,6 +12,7 @@ interface PythonScripterSettings {
 	passCurrentFile: { [index: string]: boolean };
 	additionalArgs: { [index: string]: string[] };
 	promptedArgs: { [index: string]: boolean[] };
+	dotFiles: { [index: string]: string };
 	// useLastFile: boolean;
 }
 
@@ -23,6 +24,7 @@ const DEFAULT_SETTINGS: PythonScripterSettings = {
 	passCurrentFile: {},
 	additionalArgs: {},
 	promptedArgs: {},
+	dotFiles: {}
 	// useLastFile: false
 }
 
@@ -77,6 +79,29 @@ export default class PythonScripterPlugin extends Plugin {
 							return;
 						}
 
+						// Fixing relative paths
+						let dot_files = this.settings.dotFiles[fileName];
+						if (dot_files != undefined && !path.isAbsolute(dot_files)) {
+							dot_files = path.join(basePath, dot_files);
+						}
+
+						// Setting Environment Variables
+						if (fileName in this.settings.dotFiles) {
+							if (!fs.existsSync(dot_files)) {
+								new Notice(`Error: ${dot_files} does not exist`)
+								console.log(`Error: ${dot_files} does not exist`)
+								return;
+							}
+							let dotFile = fs.readFileSync(dot_files, 'utf8');
+							let lines = dotFile.split("\n");
+							for (var i = 0; i < lines.length; i++) {
+								let line = lines[i].split("=");
+								if (line.length == 2) {
+									process.env[line[0]] = line[1];
+								}
+							}
+						}
+
 						// Getting Executable
 						let python_exe = "";
 						if (this.settings.pythonExe != "") {
@@ -126,57 +151,73 @@ export default class PythonScripterPlugin extends Plugin {
 
 
 						if (this.settings.passVaultPath[fileName]) {
-							args.push(basePath);
-						}
-						if (this.settings.passCurrentFile[fileName]) {
-							var local_current_file_path = this.app.workspace.getActiveFile()?.path?.toString();
-							if (!(local_current_file_path === undefined)) {
-								args.push(local_current_file_path);
-							} else {
-								args.push("");
+							let get_vault_path = true;
+							let get_file_path = true;
+							if (this.settings.passVaultPath[fileName] === undefined) {
+								this.settings.passVaultPath[fileName] = true;
+								get_vault_path = true;
+								this.saveSettings();
 							}
-						}
-						for (var i = 0; i < this.settings.additionalArgs[fileName].length; i++) {
-							let done = false;
-							if (this.settings.promptedArgs[fileName][i]) {
-								new Notice(`Prompting user for input for ${fileName} argument ${i + 1}`);
-								console.log(`Prompting user for input for ${fileName} argument ${i + 1}`);
+							if (this.settings.passCurrentFile[fileName] === undefined) {
+								this.settings.passCurrentFile[fileName] = true;
+								get_file_path = true;
+								this.saveSettings();
+							}
+							var args: string[] = [];
+							if (get_vault_path) {
+								args.push(basePath);
+							}
+							if (get_file_path) {
+								var local_current_file_path = this.app.workspace.getActiveFile()?.path?.toString();
+								if (!(local_current_file_path === undefined)) {
+									args.push(local_current_file_path);
+								} else {
+									args.push("");
+								}
+							}
+							if (this.settings.additionalArgs[fileName] === undefined) {
+								this.settings.additionalArgs[fileName] = [];
+							}
+							for (var i = 0; i < this.settings.additionalArgs[fileName].length; i++) {
 								let done = false;
-								let modal = new ModalForm(this.app, (result) => {
-									args[i + buffer] = result;
+								if (this.settings.promptedArgs[fileName][i]) {
+									new Notice(`Prompting user for input for ${fileName} argument ${i + 1}`);
+									console.log(`Prompting user for input for ${fileName} argument ${i + 1}`);
+									let done = false;
+									let modal = new ModalForm(this.app, (result) => {
+										args[i + buffer] = result;
+										done = true;
+									});
+									modal.open();
+
+
+								} else {
 									done = true;
-								});
-								modal.open();
+									args[i + buffer] = this.settings.additionalArgs[fileName][i];
+								}
 
+								// Waiting on user input
+								while (args[i + buffer] == undefined) {
+									await sleep(20);
 
-							} else {
-								done = true;
-								args[i + buffer] = this.settings.additionalArgs[fileName][i];
+								}
+								console.log(`Arg ${i + 1}: ${args[i + buffer]}`);
 							}
-
-							// Waiting on user input
-							while (args[i + buffer] == undefined) {
-								await sleep(20);
-
+							// Running the script
+							let command = `${python_exe} \"${main_file}\"`;
+							for (var i = 0; i < args.length; i++) {
+								command += ` \"${args[i]}\"`;
 							}
-							console.log(`Arg ${i + 1}: ${args[i + buffer]}`);
+							exec(command, { cwd: this.pythonDirectory }, (error: any, stdout: any, stderr: any) => {
+								if (error) {
+									new Notice(`Error executing script ${filePath}: ${error}`);
+									console.log(`Error executing script ${filePath}: ${error}`)
+									return;
+								}
+								new Notice(`Script ` + fileName + ` output:\n${stdout}`);
+								console.log(`Script ` + fileName + ` output:\n${stdout}`)
+							});
 						}
-
-						// Running the script
-						let command = `${python_exe} \"${main_file}\"`;
-						for (var i = 0; i < args.length; i++) {
-							command += ` \"${args[i]}\"`;
-						}
-
-						exec(command, { cwd: this.pythonDirectory }, (error: any, stdout: any, stderr: any) => {
-							if (error) {
-								new Notice(`Error executing script ${filePath}: ${error}`);
-								console.log(`Error executing script ${filePath}: ${error}`)
-								return;
-							}
-							new Notice(`Script ` + fileName + ` output:\n${stdout}`);
-							console.log(`Script ` + fileName + ` output:\n${stdout}`)
-						});
 					});
 
 				}
@@ -240,6 +281,9 @@ class PythonScripterSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 		this.containerEl.createEl("h1", { text: `Scripts` });
+		// Create an area with preable information
+		this.containerEl.createEl("p", { text: `Use the following areas to set settings per script, paths provided may either be absolute or relative to the vault path.` });
+
 		for (var index = 0; index < this.files.length; index++) {
 			let file = this.files[index];
 			if (!(file in this.plugin.settings.passVaultPath)) {
@@ -257,6 +301,17 @@ class PythonScripterSettingTab extends PluginSettingTab {
 						.setValue(this.plugin.settings.pythonIndividualExes[file])
 						.onChange(async (value) => {
 							this.plugin.settings.pythonIndividualExes[file] = value;
+							await this.plugin.saveSettings();
+						});
+				});
+			new Setting(containerEl)
+				.setName(`${file} .env File`)
+				.setDesc(`Provides Runtime Environment Variables for ${file}`)
+				.addTextArea((area) => {
+					area
+						.setValue(this.plugin.settings.dotFiles[file])
+						.onChange(async (value) => {
+							this.plugin.settings.dotFiles[file] = value;
 							await this.plugin.saveSettings();
 						});
 				});
