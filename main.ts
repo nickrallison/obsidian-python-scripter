@@ -11,6 +11,7 @@ interface PythonScripterSettings {
 	passVaultPath: { [index: string]: boolean };
 	passCurrentFile: { [index: string]: boolean };
 	additionalArgs: { [index: string]: string[] };
+	promptedArgs: { [index: string]: boolean[] };
 	// useLastFile: boolean;
 }
 
@@ -21,6 +22,7 @@ const DEFAULT_SETTINGS: PythonScripterSettings = {
 	passVaultPath: {},
 	passCurrentFile: {},
 	additionalArgs: {},
+	promptedArgs: {},
 	// useLastFile: false
 }
 
@@ -69,7 +71,7 @@ export default class PythonScripterPlugin extends Plugin {
 				id: "run-" + files[index],
 				name: 'Run ' + files[index],
 				callback: () => {
-					fs.stat(filePath, (err: any, stats: { isFile: () => any; isDirectory: () => any; }) => {
+					fs.stat(filePath, async (err: any, stats: { isFile: () => any; isDirectory: () => any; }) => {
 						if (err) {
 							console.error(err);
 							return;
@@ -109,7 +111,20 @@ export default class PythonScripterPlugin extends Plugin {
 						}
 
 						// Getting Arguments
-						var args = [];
+
+						var len = this.settings.additionalArgs[fileName].length;
+						var buffer = 0;
+						var args: string[] = [];
+						if (this.settings.passVaultPath[fileName]) {
+							buffer++;
+						}
+						if (this.settings.passCurrentFile[fileName]) {
+							buffer++;
+						}
+
+						// args.fill("", 0, len + buffer)
+
+
 						if (this.settings.passVaultPath[fileName]) {
 							args.push(basePath);
 						}
@@ -122,7 +137,29 @@ export default class PythonScripterPlugin extends Plugin {
 							}
 						}
 						for (var i = 0; i < this.settings.additionalArgs[fileName].length; i++) {
-							args.push(this.settings.additionalArgs[fileName][i]);
+							let done = false;
+							if (this.settings.promptedArgs[fileName][i]) {
+								new Notice(`Prompting user for input for ${fileName} argument ${i + 1}`);
+								console.log(`Prompting user for input for ${fileName} argument ${i + 1}`);
+								let done = false;
+								let modal = new ModalForm(this.app, (result) => {
+									args[i + buffer] = result;
+									done = true;
+								});
+								modal.open();
+
+
+							} else {
+								done = true;
+								args[i + buffer] = this.settings.additionalArgs[fileName][i];
+							}
+
+							// Waiting on user input
+							while (args[i + buffer] == undefined) {
+								await sleep(20);
+
+							}
+							console.log(`Arg ${i + 1}: ${args[i + buffer]}`);
 						}
 
 						// Running the script
@@ -255,6 +292,7 @@ class PythonScripterSettingTab extends PluginSettingTab {
 					area
 						.onClick(async (value) => {
 							this.plugin.settings.additionalArgs[file].push("");
+							this.plugin.settings.promptedArgs[file].push(false);
 							await this.plugin.saveSettings();
 							this.display();
 						}).setIcon("plus");
@@ -266,12 +304,16 @@ class PythonScripterSettingTab extends PluginSettingTab {
 					area
 						.onClick(async (value) => {
 							this.plugin.settings.additionalArgs[file].pop();
+							this.plugin.settings.promptedArgs[file].pop();
 							await this.plugin.saveSettings();
 							this.display();
 						}).setIcon("minus");
 				});
 			if (!(file in this.plugin.settings.additionalArgs)) {
 				this.plugin.settings.additionalArgs[file] = [];
+			}
+			if (!(file in this.plugin.settings.promptedArgs)) {
+				this.plugin.settings.promptedArgs[file] = [];
 			}
 			if (this.plugin.settings.passVaultPath[file] && this.plugin.settings.passCurrentFile[file]) {
 				new Setting(containerEl)
@@ -302,6 +344,17 @@ class PythonScripterSettingTab extends PluginSettingTab {
 									await this.plugin.saveSettings();
 								});
 						});
+					new Setting(containerEl)
+						.setName(`Prompt User`)
+						.setDesc(`Whether to prompt user for manual input for arg ${i + 3}`)
+						.addToggle((area) => {
+							area
+								.setValue(this.plugin.settings.promptedArgs[file][i])
+								.onChange(async (value) => {
+									this.plugin.settings.promptedArgs[file][i] = value;
+									await this.plugin.saveSettings();
+								});
+						});
 				}
 			}
 			else if (this.plugin.settings.passVaultPath[file] && !this.plugin.settings.passCurrentFile[file]) {
@@ -322,6 +375,17 @@ class PythonScripterSettingTab extends PluginSettingTab {
 								.setValue(this.plugin.settings.additionalArgs[file][i])
 								.onChange(async (value) => {
 									this.plugin.settings.additionalArgs[file][i] = value;
+									await this.plugin.saveSettings();
+								});
+						});
+					new Setting(containerEl)
+						.setName(`Prompt User`)
+						.setDesc(`Whether to prompt user for manual input for arg ${i + 2}`)
+						.addToggle((area) => {
+							area
+								.setValue(this.plugin.settings.promptedArgs[file][i])
+								.onChange(async (value) => {
+									this.plugin.settings.promptedArgs[file][i] = value;
 									await this.plugin.saveSettings();
 								});
 						});
@@ -348,6 +412,17 @@ class PythonScripterSettingTab extends PluginSettingTab {
 									await this.plugin.saveSettings();
 								});
 						});
+					new Setting(containerEl)
+						.setName(`Prompt User`)
+						.setDesc(`Whether to prompt user for manual input for arg ${i + 2}`)
+						.addToggle((area) => {
+							area
+								.setValue(this.plugin.settings.promptedArgs[file][i])
+								.onChange(async (value) => {
+									this.plugin.settings.promptedArgs[file][i] = value;
+									await this.plugin.saveSettings();
+								});
+						});
 				}
 			} else {
 				for (var i = 0; i < this.plugin.settings.additionalArgs[file].length; i++) {
@@ -362,6 +437,17 @@ class PythonScripterSettingTab extends PluginSettingTab {
 									await this.plugin.saveSettings();
 								});
 						});
+					new Setting(containerEl)
+						.setName(`Prompt User`)
+						.setDesc(`Whether to prompt user for manual input for arg ${i + 1}`)
+						.addToggle((area) => {
+							area
+								.setValue(this.plugin.settings.promptedArgs[file][i])
+								.onChange(async (value) => {
+									this.plugin.settings.promptedArgs[file][i] = value;
+									await this.plugin.saveSettings();
+								});
+						});
 				}
 			}
 
@@ -369,4 +455,48 @@ class PythonScripterSettingTab extends PluginSettingTab {
 		}
 	}
 
+
+
+}
+
+export class ModalForm extends Modal {
+	result: string;
+	onSubmit: (result: string) => void;
+
+	constructor(app: App, onSubmit: (result: string) => void) {
+		super(app);
+		this.onSubmit = onSubmit;
+	}
+
+	onOpen() {
+		const { contentEl } = this;
+
+		contentEl.createEl("h1", { text: "Specify your argument" });
+
+		new Setting(contentEl)
+			.setName("Argument")
+			.addText((text) =>
+				text.onChange((value) => {
+					this.result = value
+				}));
+
+		new Setting(contentEl)
+			.addButton((btn) =>
+				btn
+					.setButtonText("Submit")
+					.setCta()
+					.onClick(() => {
+						this.close();
+						this.onSubmit(this.result);
+					}));
+	}
+
+	onClose() {
+		let { contentEl } = this;
+		contentEl.empty();
+	}
+}
+
+async function sleep(msec: number) {
+	return new Promise(resolve => setTimeout(resolve, msec));
 }
