@@ -400,13 +400,16 @@ class PythonScripterSettingTab extends PluginSettingTab {
 								});
 						});
 					new Setting(containerEl)
-						.setName(`Prompt User`)
+						.setName(`Prompt User for Arg ${i + 3}`)
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 3}`)
 						.addToggle((area) => {
 							area
 								.setValue(this.plugin.settings.promptedArgs[file][i])
 								.onChange(async (value) => {
+									console.log(`Old: ${this.plugin.settings.promptedArgs[file][i]}`);
 									this.plugin.settings.promptedArgs[file][i] = value;
+									console.log(`new: ${value}, length: ${this.plugin.settings.promptedArgs[file].length}`);
+									console.log(this.plugin.settings.promptedArgs[file]);
 									await this.plugin.saveSettings();
 								});
 						});
@@ -434,13 +437,16 @@ class PythonScripterSettingTab extends PluginSettingTab {
 								});
 						});
 					new Setting(containerEl)
-						.setName(`Prompt User`)
+						.setName(`Prompt User for Arg ${i + 2}`)
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 2}`)
 						.addToggle((area) => {
 							area
 								.setValue(this.plugin.settings.promptedArgs[file][i])
 								.onChange(async (value) => {
+									console.log(`Old: ${this.plugin.settings.promptedArgs[file][i]}`);
 									this.plugin.settings.promptedArgs[file][i] = value;
+									console.log(`new: ${value}, length: ${this.plugin.settings.promptedArgs[file].length}`);
+
 									await this.plugin.saveSettings();
 								});
 						});
@@ -468,13 +474,15 @@ class PythonScripterSettingTab extends PluginSettingTab {
 								});
 						});
 					new Setting(containerEl)
-						.setName(`Prompt User`)
+						.setName(`Prompt User for Arg ${i + 2}`)
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 2}`)
 						.addToggle((area) => {
 							area
 								.setValue(this.plugin.settings.promptedArgs[file][i])
 								.onChange(async (value) => {
+									console.log(`Old: ${this.plugin.settings.promptedArgs[file][i]}`);
 									this.plugin.settings.promptedArgs[file][i] = value;
+									console.log(`new: ${value}, length: ${this.plugin.settings.promptedArgs[file].length}`);
 									await this.plugin.saveSettings();
 								});
 						});
@@ -493,13 +501,15 @@ class PythonScripterSettingTab extends PluginSettingTab {
 								});
 						});
 					new Setting(containerEl)
-						.setName(`Prompt User`)
+						.setName(`Prompt User for Arg ${i + 1}`)
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 1}`)
 						.addToggle((area) => {
 							area
 								.setValue(this.plugin.settings.promptedArgs[file][i])
 								.onChange(async (value) => {
+									console.log(`Old: ${this.plugin.settings.promptedArgs[file][i]}`);
 									this.plugin.settings.promptedArgs[file][i] = value;
+									console.log(`new: ${value}, length: ${this.plugin.settings.promptedArgs[file].length}`);
 									await this.plugin.saveSettings();
 								});
 						});
