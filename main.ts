@@ -3,28 +3,40 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { exec } from 'child_process';
 
+class Args {
+	pass_vault_path: boolean;
+	pass_current_file: boolean;
+
+	additional_args: string[];
+	prompted: boolean[];
+	length: number;
+
+	pythonExe: string;
+	dotFile: string;
+
+	constructor(pass_vault_path: boolean, pass_current_file: boolean, additional_args: string[], prompted: boolean[]) {
+		this.pass_vault_path = pass_vault_path;
+		this.pass_current_file = pass_current_file;
+		this.additional_args = additional_args;
+		this.prompted = prompted;
+		this.length = additional_args.length;
+	}
+}
 
 interface PythonScripterSettings {
 	pythonPath: string;
 	pythonExe: string;
-	pythonIndividualExes: { [index: string]: string };
-	passVaultPath: { [index: string]: boolean };
-	passCurrentFile: { [index: string]: boolean };
-	additionalArgs: { [index: string]: string[] };
-	promptedArgs: { [index: string]: boolean[] };
-	dotFiles: { [index: string]: string };
+
+	args: { [index: string]: Args };
 	// useLastFile: boolean;
 }
 
 const DEFAULT_SETTINGS: PythonScripterSettings = {
 	pythonPath: "",
 	pythonExe: "",
-	pythonIndividualExes: {},
-	passVaultPath: {},
-	passCurrentFile: {},
-	additionalArgs: {},
-	promptedArgs: {},
-	dotFiles: {}
+
+	args: {},
+
 	// useLastFile: false
 }
 
@@ -79,20 +91,24 @@ export default class PythonScripterPlugin extends Plugin {
 							return;
 						}
 
-						// Fixing relative paths
-						let dot_files = this.settings.dotFiles[fileName];
-						if (dot_files != undefined && !path.isAbsolute(dot_files)) {
-							dot_files = path.join(basePath, dot_files);
+						if (!(fileName in this.settings.args)) {
+							this.settings.args[fileName] = new Args(true, true, [], []);
 						}
 
+						let additional_args = this.settings.args[fileName];
+
 						// Setting Environment Variables
-						if (fileName in this.settings.dotFiles) {
-							if (!fs.existsSync(dot_files)) {
-								new Notice(`Error: ${dot_files} does not exist`)
-								console.log(`Error: ${dot_files} does not exist`)
+						let dot_file = additional_args.dotFile;
+						if (dot_file != "") {
+							if (!path.isAbsolute(dot_file)) {
+								dot_file = path.join(basePath, dot_file);
+							}
+							if (!fs.existsSync(dot_file)) {
+								new Notice(`Error: ${dot_file} does not exist`)
+								console.log(`Error: ${dot_file} does not exist`)
 								return;
 							}
-							let dotFile = fs.readFileSync(dot_files, 'utf8');
+							let dotFile = fs.readFileSync(dot_file, 'utf8');
 							let lines = dotFile.split("\n");
 							for (var i = 0; i < lines.length; i++) {
 								let line = lines[i].split("=");
@@ -111,15 +127,17 @@ export default class PythonScripterPlugin extends Plugin {
 							python_exe = "python"
 						}
 
-						if (fileName in this.settings.pythonIndividualExes) {
-							python_exe = this.settings.pythonIndividualExes[fileName];
-							if (!fs.existsSync(this.settings.pythonIndividualExes[fileName])) {
-								new Notice(`Python Exe: ${this.settings.pythonIndividualExes[fileName]} for ${fileName} does not exist`)
-								console.log(`Python Exe: ${this.settings.pythonIndividualExes[fileName]} for ${fileName} does not exist`)
-								return;
-							}
 
+						if (additional_args.pythonExe != "") {
+							python_exe = additional_args.pythonExe;
 						}
+						if (!fs.existsSync(python_exe)) {
+							new Notice(`Python Exe: $python_exe} for ${fileName} does not exist`)
+							console.log(`Python Exe: ${python_exe} for ${fileName} does not exist`)
+							return;
+						}
+
+
 						console.log(`Python Exe: ${python_exe}`)
 
 						// Getting Main File
@@ -135,89 +153,68 @@ export default class PythonScripterPlugin extends Plugin {
 							return;
 						}
 
+
 						// Getting Arguments
-
-						var len = this.settings.additionalArgs[fileName].length;
-						var buffer = 0;
 						var args: string[] = [];
-						if (this.settings.passVaultPath[fileName]) {
+						var buffer = 0;
+
+						let get_vault_path = additional_args.pass_vault_path;
+						if (get_vault_path) {
+
+							args.push(basePath);
 							buffer++;
 						}
-						if (this.settings.passCurrentFile[fileName]) {
+
+						let get_file_path = additional_args.pass_current_file;
+						if (get_file_path) {
+							var local_current_file_path = this.app.workspace.getActiveFile()?.path?.toString();
+							if (!(local_current_file_path === undefined)) {
+								args.push(local_current_file_path);
+							} else {
+								args.push("");
+							}
 							buffer++;
 						}
 
-						// args.fill("", 0, len + buffer)
-
-
-						if (this.settings.passVaultPath[fileName]) {
-							let get_vault_path = true;
-							let get_file_path = true;
-							if (this.settings.passVaultPath[fileName] === undefined) {
-								this.settings.passVaultPath[fileName] = true;
-								get_vault_path = true;
-								this.saveSettings();
-							}
-							if (this.settings.passCurrentFile[fileName] === undefined) {
-								this.settings.passCurrentFile[fileName] = true;
-								get_file_path = true;
-								this.saveSettings();
-							}
-							var args: string[] = [];
-							if (get_vault_path) {
-								args.push(basePath);
-							}
-							if (get_file_path) {
-								var local_current_file_path = this.app.workspace.getActiveFile()?.path?.toString();
-								if (!(local_current_file_path === undefined)) {
-									args.push(local_current_file_path);
-								} else {
-									args.push("");
-								}
-							}
-							if (this.settings.additionalArgs[fileName] === undefined) {
-								this.settings.additionalArgs[fileName] = [];
-							}
-							for (var i = 0; i < this.settings.additionalArgs[fileName].length; i++) {
+						for (var i = 0; i < additional_args.length; i++) {
+							let done = false;
+							if (additional_args.prompted[i]) {
+								new Notice(`Prompting user for input for ${fileName} argument ${i + 1}`);
+								console.log(`Prompting user for input for ${fileName} argument ${i + 1}`);
 								let done = false;
-								if (this.settings.promptedArgs[fileName][i]) {
-									new Notice(`Prompting user for input for ${fileName} argument ${i + 1}`);
-									console.log(`Prompting user for input for ${fileName} argument ${i + 1}`);
-									let done = false;
-									let modal = new ModalForm(this.app, (result) => {
-										args[i + buffer] = result;
-										done = true;
-									});
-									modal.open();
-
-
-								} else {
+								let modal = new ModalForm(this.app, (result) => {
+									args[i + buffer] = result;
 									done = true;
-									args[i + buffer] = this.settings.additionalArgs[fileName][i];
-								}
+								});
+								modal.open();
 
-								// Waiting on user input
-								while (args[i + buffer] == undefined) {
-									await sleep(20);
 
-								}
-								console.log(`Arg ${i + 1}: ${args[i + buffer]}`);
+							} else {
+								done = true;
+								args[i + buffer] = additional_args.additional_args[i];
 							}
-							// Running the script
-							let command = `${python_exe} \"${main_file}\"`;
-							for (var i = 0; i < args.length; i++) {
-								command += ` \"${args[i]}\"`;
+
+							// Waiting on user input
+							while (args[i + buffer] == undefined) {
+								await sleep(20);
+
 							}
-							exec(command, { cwd: this.pythonDirectory }, (error: any, stdout: any, stderr: any) => {
-								if (error) {
-									new Notice(`Error executing script ${filePath}: ${error}`);
-									console.log(`Error executing script ${filePath}: ${error}`)
-									return;
-								}
-								new Notice(`Script ` + fileName + ` output:\n${stdout}`);
-								console.log(`Script ` + fileName + ` output:\n${stdout}`)
-							});
+							console.log(`Arg ${i + 1}: ${args[i + buffer]}`);
 						}
+						// Running the script
+						let command = `${python_exe} \"${main_file}\"`;
+						for (var i = 0; i < args.length; i++) {
+							command += ` \"${args[i]}\"`;
+						}
+						exec(command, { cwd: this.pythonDirectory }, (error: any, stdout: any, stderr: any) => {
+							if (error) {
+								new Notice(`Error executing script ${filePath}: ${error}`);
+								console.log(`Error executing script ${filePath}: ${error}`)
+								return;
+							}
+							new Notice(`Script ` + fileName + ` output:\n${stdout}`);
+							console.log(`Script ` + fileName + ` output:\n${stdout}`)
+						});
 					});
 
 				}
@@ -255,7 +252,7 @@ class PythonScripterSettingTab extends PluginSettingTab {
 		this.files = files
 	}
 
-	display(): void {
+	async display(): Promise<void> {
 		const { containerEl } = this;
 
 		containerEl.empty();
@@ -286,21 +283,20 @@ class PythonScripterSettingTab extends PluginSettingTab {
 
 		for (var index = 0; index < this.files.length; index++) {
 			let file = this.files[index];
-			if (!(file in this.plugin.settings.passVaultPath)) {
-				this.plugin.settings.passVaultPath[file] = true;
+			if (!(file in this.plugin.settings.args)) {
+				this.plugin.settings.args[file] = new Args(true, true, [], []);
+				await this.plugin.saveSettings();
 			}
-			if (!(file in this.plugin.settings.passCurrentFile)) {
-				this.plugin.settings.passCurrentFile[file] = true;
-			}
+
 			this.containerEl.createEl("h2", { text: `${file}` });
 			new Setting(containerEl)
 				.setName(`${file} Python Executable`)
 				.setDesc(`Overides the default python executable for ${file}`)
 				.addTextArea((area) => {
 					area
-						.setValue(this.plugin.settings.pythonIndividualExes[file])
+						.setValue(this.plugin.settings.args[file].pythonExe)
 						.onChange(async (value) => {
-							this.plugin.settings.pythonIndividualExes[file] = value;
+							this.plugin.settings.args[file].pythonExe = value;
 							await this.plugin.saveSettings();
 						});
 				});
@@ -309,9 +305,9 @@ class PythonScripterSettingTab extends PluginSettingTab {
 				.setDesc(`Provides Runtime Environment Variables for ${file}`)
 				.addTextArea((area) => {
 					area
-						.setValue(this.plugin.settings.dotFiles[file])
+						.setValue(this.plugin.settings.args[file].dotFile)
 						.onChange(async (value) => {
-							this.plugin.settings.dotFiles[file] = value;
+							this.plugin.settings.args[file].dotFile = value;
 							await this.plugin.saveSettings();
 						});
 				});
@@ -320,9 +316,9 @@ class PythonScripterSettingTab extends PluginSettingTab {
 				.setDesc(`Whether to pass the vault path to ${file}`)
 				.addToggle((area) => {
 					area
-						.setValue(this.plugin.settings.passVaultPath[file])
+						.setValue(this.plugin.settings.args[file].pass_vault_path)
 						.onChange(async (value) => {
-							this.plugin.settings.passVaultPath[file] = value;
+							this.plugin.settings.args[file].pass_vault_path = value;
 							await this.plugin.saveSettings();
 							this.display();
 						});
@@ -332,9 +328,9 @@ class PythonScripterSettingTab extends PluginSettingTab {
 				.setDesc(`Whether to pass the active file path to  to ${file}`)
 				.addToggle((area) => {
 					area
-						.setValue(this.plugin.settings.passCurrentFile[file])
+						.setValue(this.plugin.settings.args[file].pass_current_file)
 						.onChange(async (value) => {
-							this.plugin.settings.passCurrentFile[file] = value;
+							this.plugin.settings.args[file].pass_current_file = value;
 							await this.plugin.saveSettings();
 							this.display();
 						});
@@ -346,8 +342,9 @@ class PythonScripterSettingTab extends PluginSettingTab {
 				.addButton((area) => {
 					area
 						.onClick(async (value) => {
-							this.plugin.settings.additionalArgs[file].push("");
-							this.plugin.settings.promptedArgs[file].push(false);
+							this.plugin.settings.args[file].length++;
+							resize(this.plugin.settings.args[file].additional_args, this.plugin.settings.args[file].length, "");
+							resize(this.plugin.settings.args[file].prompted, this.plugin.settings.args[file].length, false);
 							await this.plugin.saveSettings();
 							this.display();
 						}).setIcon("plus");
@@ -358,19 +355,15 @@ class PythonScripterSettingTab extends PluginSettingTab {
 				.addButton((area) => {
 					area
 						.onClick(async (value) => {
-							this.plugin.settings.additionalArgs[file].pop();
-							this.plugin.settings.promptedArgs[file].pop();
+							this.plugin.settings.args[file].length--;
+							resize(this.plugin.settings.args[file].additional_args, this.plugin.settings.args[file].length, "");
+							resize(this.plugin.settings.args[file].prompted, this.plugin.settings.args[file].length, false);
 							await this.plugin.saveSettings();
 							this.display();
 						}).setIcon("minus");
 				});
-			if (!(file in this.plugin.settings.additionalArgs)) {
-				this.plugin.settings.additionalArgs[file] = [];
-			}
-			if (!(file in this.plugin.settings.promptedArgs)) {
-				this.plugin.settings.promptedArgs[file] = [];
-			}
-			if (this.plugin.settings.passVaultPath[file] && this.plugin.settings.passCurrentFile[file]) {
+
+			if (this.plugin.settings.args[file].pass_vault_path && this.plugin.settings.args[file].pass_current_file) {
 				new Setting(containerEl)
 					.setName(`Arg 1`)
 					.addText((area) => {
@@ -387,15 +380,15 @@ class PythonScripterSettingTab extends PluginSettingTab {
 							.setPlaceholder("[active file]")
 							.setDisabled(true)
 					});
-				for (var i = 0; i < this.plugin.settings.additionalArgs[file].length; i++) {
+				for (var i = 0; i < this.plugin.settings.args[file].length; i++) {
 					new Setting(containerEl)
 						.setName(`Arg ${i + 3}`)
 						.addText((area) => {
 							area
 								.setPlaceholder('Enter argument')
-								.setValue(this.plugin.settings.additionalArgs[file][i])
+								.setValue(this.plugin.settings.args[file].additional_args[i])
 								.onChange(async (value) => {
-									this.plugin.settings.additionalArgs[file][i] = value;
+									this.plugin.settings.args[file].additional_args[i] = value;
 									await this.plugin.saveSettings();
 								});
 						});
@@ -404,18 +397,19 @@ class PythonScripterSettingTab extends PluginSettingTab {
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 3}`)
 						.addToggle((area) => {
 							area
-								.setValue(this.plugin.settings.promptedArgs[file][i])
+								.setValue(this.plugin.settings.args[file].prompted[i])
 								.onChange(async (value) => {
-									console.log(`Old: ${this.plugin.settings.promptedArgs[file][i]}`);
-									this.plugin.settings.promptedArgs[file][i] = value;
-									console.log(`new: ${value}, length: ${this.plugin.settings.promptedArgs[file].length}`);
-									console.log(this.plugin.settings.promptedArgs[file]);
+									console.log(this.plugin.settings.args[file]);
+									this.plugin.settings.args[file].prompted[i] = value;
+									console.log(this.plugin.settings.args[file]);
+									resize(this.plugin.settings.args[file].additional_args, this.plugin.settings.args[file].length, "");
+									resize(this.plugin.settings.args[file].prompted, this.plugin.settings.args[file].length, false);
 									await this.plugin.saveSettings();
 								});
 						});
 				}
 			}
-			else if (this.plugin.settings.passVaultPath[file] && !this.plugin.settings.passCurrentFile[file]) {
+			else if (this.plugin.settings.args[file].pass_vault_path && !this.plugin.settings.args[file].pass_current_file) {
 				new Setting(containerEl)
 					.setName(`Arg 1`)
 					.addText((area) => {
@@ -424,15 +418,15 @@ class PythonScripterSettingTab extends PluginSettingTab {
 							.setPlaceholder("[vault path]")
 							.setDisabled(true)
 					});
-				for (var i = 0; i < this.plugin.settings.additionalArgs[file].length; i++) {
+				for (var i = 0; i < this.plugin.settings.args[file].length; i++) {
 					new Setting(containerEl)
 						.setName(`Arg ${i + 2}`)
 						.addText((area) => {
 							area
 								.setPlaceholder('Enter argument')
-								.setValue(this.plugin.settings.additionalArgs[file][i])
+								.setValue(this.plugin.settings.args[file].additional_args[i])
 								.onChange(async (value) => {
-									this.plugin.settings.additionalArgs[file][i] = value;
+									this.plugin.settings.args[file].additional_args[i] = value;
 									await this.plugin.saveSettings();
 								});
 						});
@@ -441,18 +435,19 @@ class PythonScripterSettingTab extends PluginSettingTab {
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 2}`)
 						.addToggle((area) => {
 							area
-								.setValue(this.plugin.settings.promptedArgs[file][i])
+								.setValue(this.plugin.settings.args[file].prompted[i])
 								.onChange(async (value) => {
-									console.log(`Old: ${this.plugin.settings.promptedArgs[file][i]}`);
-									this.plugin.settings.promptedArgs[file][i] = value;
-									console.log(`new: ${value}, length: ${this.plugin.settings.promptedArgs[file].length}`);
-
+									console.log(this.plugin.settings.args[file]);
+									this.plugin.settings.args[file].prompted[i] = value;
+									console.log(this.plugin.settings.args[file]);
+									resize(this.plugin.settings.args[file].additional_args, this.plugin.settings.args[file].length, "");
+									resize(this.plugin.settings.args[file].prompted, this.plugin.settings.args[file].length, false);
 									await this.plugin.saveSettings();
 								});
 						});
 				}
 			}
-			else if (!this.plugin.settings.passVaultPath[file] && this.plugin.settings.passCurrentFile[file]) {
+			else if (!this.plugin.settings.args[file].pass_vault_path && this.plugin.settings.args[file].pass_current_file) {
 				new Setting(containerEl)
 					.setName(`Arg 1`)
 					.addText((area) => {
@@ -461,15 +456,15 @@ class PythonScripterSettingTab extends PluginSettingTab {
 							.setPlaceholder("[active file]")
 							.setDisabled(true)
 					});
-				for (var i = 0; i < this.plugin.settings.additionalArgs[file].length; i++) {
+				for (var i = 0; i < this.plugin.settings.args[file].length; i++) {
 					new Setting(containerEl)
 						.setName(`Arg ${i + 2}`)
 						.addText((area) => {
 							area
 								.setPlaceholder('Enter argument')
-								.setValue(this.plugin.settings.additionalArgs[file][i])
+								.setValue(this.plugin.settings.args[file].additional_args[i])
 								.onChange(async (value) => {
-									this.plugin.settings.additionalArgs[file][i] = value;
+									this.plugin.settings.args[file].additional_args[i] = value;
 									await this.plugin.saveSettings();
 								});
 						});
@@ -478,25 +473,28 @@ class PythonScripterSettingTab extends PluginSettingTab {
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 2}`)
 						.addToggle((area) => {
 							area
-								.setValue(this.plugin.settings.promptedArgs[file][i])
+								.setValue(this.plugin.settings.args[file].prompted[i])
 								.onChange(async (value) => {
-									console.log(`Old: ${this.plugin.settings.promptedArgs[file][i]}`);
-									this.plugin.settings.promptedArgs[file][i] = value;
-									console.log(`new: ${value}, length: ${this.plugin.settings.promptedArgs[file].length}`);
+									console.log(this.plugin.settings.args[file]);
+									this.plugin.settings.args[file].prompted[i] = value;
+									console.log(this.plugin.settings.args[file]);
+									resize(this.plugin.settings.args[file].additional_args, this.plugin.settings.args[file].length, "");
+									resize(this.plugin.settings.args[file].prompted, this.plugin.settings.args[file].length, false);
 									await this.plugin.saveSettings();
 								});
 						});
 				}
 			} else {
-				for (var i = 0; i < this.plugin.settings.additionalArgs[file].length; i++) {
+				for (var i = 0; i < this.plugin.settings.args[file].length; i++) {
 					new Setting(containerEl)
 						.setName(`Arg ${i + 1}`)
 						.addText((area) => {
+
 							area
 								.setPlaceholder('Enter argument')
-								.setValue(this.plugin.settings.additionalArgs[file][i])
+								.setValue(this.plugin.settings.args[file].additional_args[i])
 								.onChange(async (value) => {
-									this.plugin.settings.additionalArgs[file][i] = value;
+									this.plugin.settings.args[file].additional_args[i] = value;
 									await this.plugin.saveSettings();
 								});
 						});
@@ -505,11 +503,13 @@ class PythonScripterSettingTab extends PluginSettingTab {
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 1}`)
 						.addToggle((area) => {
 							area
-								.setValue(this.plugin.settings.promptedArgs[file][i])
+								.setValue(this.plugin.settings.args[file].prompted[i])
 								.onChange(async (value) => {
-									console.log(`Old: ${this.plugin.settings.promptedArgs[file][i]}`);
-									this.plugin.settings.promptedArgs[file][i] = value;
-									console.log(`new: ${value}, length: ${this.plugin.settings.promptedArgs[file].length}`);
+									console.log(this.plugin.settings.args[file]);
+									this.plugin.settings.args[file].prompted[i] = value;
+									console.log(this.plugin.settings.args[file]);
+									resize(this.plugin.settings.args[file].additional_args, this.plugin.settings.args[file].length, "");
+									resize(this.plugin.settings.args[file].prompted, this.plugin.settings.args[file].length, false);
 									await this.plugin.saveSettings();
 								});
 						});
@@ -564,4 +564,9 @@ export class ModalForm extends Modal {
 
 async function sleep(msec: number) {
 	return new Promise(resolve => setTimeout(resolve, msec));
+}
+
+function resize(arr: any[], size: number, defval: any) {
+	while (arr.length > size) { arr.pop(); }
+	while (arr.length < size) { arr.push(defval); }
 }
