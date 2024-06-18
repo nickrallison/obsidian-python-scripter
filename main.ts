@@ -14,12 +14,16 @@ class Args {
 	pythonExe: string;
 	dotFile: string;
 
-	constructor(pass_vault_path: boolean, pass_current_file: boolean, additional_args: string[], prompted: boolean[]) {
+	constructor(pass_vault_path: boolean, pass_current_file: boolean, additional_args: string[], prompted: boolean[], pythonExe: string = "", dotFile: string = "") {
 		this.pass_vault_path = pass_vault_path;
 		this.pass_current_file = pass_current_file;
+
 		this.additional_args = additional_args;
 		this.prompted = prompted;
 		this.length = additional_args.length;
+
+		this.pythonExe = pythonExe;
+		this.dotFile = dotFile;
 	}
 }
 
@@ -100,6 +104,7 @@ export default class PythonScripterPlugin extends Plugin {
 						// Setting Environment Variables
 						let dot_file = additional_args.dotFile;
 						if (dot_file != "") {
+							// console.log(`${dot_file}`);
 							if (!path.isAbsolute(dot_file)) {
 								dot_file = path.join(basePath, dot_file);
 							}
@@ -130,15 +135,14 @@ export default class PythonScripterPlugin extends Plugin {
 
 						if (additional_args.pythonExe != "") {
 							python_exe = additional_args.pythonExe;
-						}
-						if (!fs.existsSync(python_exe)) {
-							new Notice(`Python Exe: $python_exe} for ${fileName} does not exist`)
-							console.log(`Python Exe: ${python_exe} for ${fileName} does not exist`)
-							return;
+							if (!fs.existsSync(python_exe)) {
+								new Notice(`Python Exe: $python_exe} for ${fileName} does not exist`)
+								console.log(`Python Exe: ${python_exe} for ${fileName} does not exist`)
+								return;
+							}
 						}
 
-
-						console.log(`Python Exe: ${python_exe}`)
+						// console.log(`Python Exe: ${python_exe}`)
 
 						// Getting Main File
 						let main_file = "";
@@ -199,7 +203,7 @@ export default class PythonScripterPlugin extends Plugin {
 								await sleep(20);
 
 							}
-							console.log(`Arg ${i + 1}: ${args[i + buffer]}`);
+							// console.log(`Arg ${i + 1}: ${args[i + buffer]}`);
 						}
 						// Running the script
 						let command = `${python_exe} \"${main_file}\"`;
@@ -384,27 +388,27 @@ class PythonScripterSettingTab extends PluginSettingTab {
 					new Setting(containerEl)
 						.setName(`Arg ${i + 3}`)
 						.addText((area) => {
+							const index = i;
 							area
 								.setPlaceholder('Enter argument')
-								.setValue(this.plugin.settings.args[file].additional_args[i])
-								.onChange(async (value) => {
-									this.plugin.settings.args[file].additional_args[i] = value;
-									await this.plugin.saveSettings();
+								.setValue(this.plugin.settings.args[file].additional_args[index])
+								.onChange((value) => {
+									this.plugin.settings.args[file].additional_args[index] = value;
+									this.plugin.saveSettings();
 								});
 						});
 					new Setting(containerEl)
 						.setName(`Prompt User for Arg ${i + 3}`)
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 3}`)
 						.addToggle((area) => {
+							const index = i;
 							area
 								.setValue(this.plugin.settings.args[file].prompted[i])
-								.onChange(async (value) => {
-									console.log(this.plugin.settings.args[file]);
-									this.plugin.settings.args[file].prompted[i] = value;
-									console.log(this.plugin.settings.args[file]);
+								.onChange((value) => {
+									this.plugin.settings.args[file].prompted[index] = value;
 									resize(this.plugin.settings.args[file].additional_args, this.plugin.settings.args[file].length, "");
 									resize(this.plugin.settings.args[file].prompted, this.plugin.settings.args[file].length, false);
-									await this.plugin.saveSettings();
+									this.plugin.saveSettings();
 								});
 						});
 				}
@@ -422,27 +426,27 @@ class PythonScripterSettingTab extends PluginSettingTab {
 					new Setting(containerEl)
 						.setName(`Arg ${i + 2}`)
 						.addText((area) => {
+							const index = i;
 							area
 								.setPlaceholder('Enter argument')
-								.setValue(this.plugin.settings.args[file].additional_args[i])
-								.onChange(async (value) => {
-									this.plugin.settings.args[file].additional_args[i] = value;
-									await this.plugin.saveSettings();
+								.setValue(this.plugin.settings.args[file].additional_args[index])
+								.onChange((value) => {
+									this.plugin.settings.args[file].additional_args[index] = value;
+									this.plugin.saveSettings();
 								});
 						});
 					new Setting(containerEl)
 						.setName(`Prompt User for Arg ${i + 2}`)
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 2}`)
 						.addToggle((area) => {
+							const index = i;
 							area
-								.setValue(this.plugin.settings.args[file].prompted[i])
-								.onChange(async (value) => {
-									console.log(this.plugin.settings.args[file]);
-									this.plugin.settings.args[file].prompted[i] = value;
-									console.log(this.plugin.settings.args[file]);
+								.setValue(this.plugin.settings.args[file].prompted[index])
+								.onChange((value) => {
+									this.plugin.settings.args[file].prompted[index] = value;
 									resize(this.plugin.settings.args[file].additional_args, this.plugin.settings.args[file].length, "");
 									resize(this.plugin.settings.args[file].prompted, this.plugin.settings.args[file].length, false);
-									await this.plugin.saveSettings();
+									this.plugin.saveSettings();
 								});
 						});
 				}
@@ -460,27 +464,27 @@ class PythonScripterSettingTab extends PluginSettingTab {
 					new Setting(containerEl)
 						.setName(`Arg ${i + 2}`)
 						.addText((area) => {
+							const index = i;
 							area
 								.setPlaceholder('Enter argument')
-								.setValue(this.plugin.settings.args[file].additional_args[i])
-								.onChange(async (value) => {
-									this.plugin.settings.args[file].additional_args[i] = value;
-									await this.plugin.saveSettings();
+								.setValue(this.plugin.settings.args[file].additional_args[index])
+								.onChange((value) => {
+									this.plugin.settings.args[file].additional_args[index] = value;
+									this.plugin.saveSettings();
 								});
 						});
 					new Setting(containerEl)
 						.setName(`Prompt User for Arg ${i + 2}`)
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 2}`)
 						.addToggle((area) => {
+							const index = i;
 							area
 								.setValue(this.plugin.settings.args[file].prompted[i])
-								.onChange(async (value) => {
-									console.log(this.plugin.settings.args[file]);
-									this.plugin.settings.args[file].prompted[i] = value;
-									console.log(this.plugin.settings.args[file]);
+								.onChange((value) => {
+									this.plugin.settings.args[file].prompted[index] = value;
 									resize(this.plugin.settings.args[file].additional_args, this.plugin.settings.args[file].length, "");
 									resize(this.plugin.settings.args[file].prompted, this.plugin.settings.args[file].length, false);
-									await this.plugin.saveSettings();
+									this.plugin.saveSettings();
 								});
 						});
 				}
@@ -489,12 +493,12 @@ class PythonScripterSettingTab extends PluginSettingTab {
 					new Setting(containerEl)
 						.setName(`Arg ${i + 1}`)
 						.addText((area) => {
-
+							const index = i;
 							area
 								.setPlaceholder('Enter argument')
 								.setValue(this.plugin.settings.args[file].additional_args[i])
 								.onChange(async (value) => {
-									this.plugin.settings.args[file].additional_args[i] = value;
+									this.plugin.settings.args[file].additional_args[index] = value;
 									await this.plugin.saveSettings();
 								});
 						});
@@ -502,15 +506,14 @@ class PythonScripterSettingTab extends PluginSettingTab {
 						.setName(`Prompt User for Arg ${i + 1}`)
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 1}`)
 						.addToggle((area) => {
+							const index = i;
 							area
 								.setValue(this.plugin.settings.args[file].prompted[i])
-								.onChange(async (value) => {
-									console.log(this.plugin.settings.args[file]);
-									this.plugin.settings.args[file].prompted[i] = value;
-									console.log(this.plugin.settings.args[file]);
+								.onChange((value) => {
+									this.plugin.settings.args[file].prompted[index] = value;
 									resize(this.plugin.settings.args[file].additional_args, this.plugin.settings.args[file].length, "");
 									resize(this.plugin.settings.args[file].prompted, this.plugin.settings.args[file].length, false);
-									await this.plugin.saveSettings();
+									this.plugin.saveSettings();
 								});
 						});
 				}
