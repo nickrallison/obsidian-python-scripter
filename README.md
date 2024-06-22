@@ -76,6 +76,16 @@ abs_file_path = os.path.abspath(os.path.join(vault_path, file_path))
 print(f"This is the open file: {abs_file_path}")
 ```
 
+### Environment
+
+If you don't want to add secrets directly to your scripts, you can store them elsewhere in an environment file, which can then be imported at run time.
+
+Example Env File:
+```
+SECRET_PASSWORD=supersecretword
+OTHER_PASSWORD=password
+```
+
 ## Settings
 
 You have the ability to change the default python script location in settings. Additionally you have the ability to change the default python executable, or can configure python executables per script if you would like to use virtual environments. i.e. Python Exe: C:\Users\nickr\Documents\Projects\Scratch\.venv\Scripts\python.exe
