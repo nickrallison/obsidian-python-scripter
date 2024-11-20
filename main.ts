@@ -8,19 +8,17 @@ class Args {
 	pass_current_file: boolean;
 
 	additional_args: string[];
-	additional_args_desc: string[];
 	prompted: boolean[];
 	length: number;
 
 	pythonExe: string;
 	dotFile: string;
 
-	constructor(pass_vault_path: boolean, pass_current_file: boolean, additional_args: string[], additional_args_desc: string[], prompted: boolean[], pythonExe: string = "", dotFile: string = "") {
+	constructor(pass_vault_path: boolean, pass_current_file: boolean, additional_args: string[], prompted: boolean[], pythonExe: string = "", dotFile: string = "") {
 		this.pass_vault_path = pass_vault_path;
 		this.pass_current_file = pass_current_file;
 
 		this.additional_args = additional_args;
-		this.additional_args_desc = additional_args_desc;
 		this.prompted = prompted;
 		this.length = additional_args.length;
 
@@ -98,7 +96,7 @@ export default class PythonScripterPlugin extends Plugin {
 						}
 
 						if (!(fileName in this.settings.args)) {
-							this.settings.args[fileName] = new Args(true, true, [], [], []);
+							this.settings.args[fileName] = new Args(true, true, [], []);
 						}
 
 						let additional_args = this.settings.args[fileName];
@@ -188,7 +186,7 @@ export default class PythonScripterPlugin extends Plugin {
 								new Notice(`Prompting user for input for ${fileName} argument ${i + 1}`);
 								console.log(`Prompting user for input for ${fileName} argument ${i + 1}`);
 								let done = false;
-								let modal = new ModalForm(this.app, additional_args, i ,(result) => {
+								let modal = new ModalForm(this.app, (result) => {
 									args[i + buffer] = result;
 									done = true;
 								});
@@ -290,7 +288,7 @@ class PythonScripterSettingTab extends PluginSettingTab {
 		for (var index = 0; index < this.files.length; index++) {
 			let file = this.files[index];
 			if (!(file in this.plugin.settings.args)) {
-				this.plugin.settings.args[file] = new Args(true, true, [], [], []);
+				this.plugin.settings.args[file] = new Args(true, true, [], []);
 				await this.plugin.saveSettings();
 			}
 
@@ -350,7 +348,6 @@ class PythonScripterSettingTab extends PluginSettingTab {
 						.onClick(async (value) => {
 							this.plugin.settings.args[file].length++;
 							resize(this.plugin.settings.args[file].additional_args, this.plugin.settings.args[file].length, "");
-							resize(this.plugin.settings.args[file].additional_args_desc, this.plugin.settings.args[file].length,"")
 							resize(this.plugin.settings.args[file].prompted, this.plugin.settings.args[file].length, false);
 							await this.plugin.saveSettings();
 							this.display();
@@ -364,7 +361,6 @@ class PythonScripterSettingTab extends PluginSettingTab {
 						.onClick(async (value) => {
 							this.plugin.settings.args[file].length--;
 							resize(this.plugin.settings.args[file].additional_args, this.plugin.settings.args[file].length, "");
-							resize(this.plugin.settings.args[file].additional_args_desc, this.plugin.settings.args[file].length,"")
 							resize(this.plugin.settings.args[file].prompted, this.plugin.settings.args[file].length, false);
 							await this.plugin.saveSettings();
 							this.display();
@@ -398,18 +394,6 @@ class PythonScripterSettingTab extends PluginSettingTab {
 								.setValue(this.plugin.settings.args[file].additional_args[index])
 								.onChange((value) => {
 									this.plugin.settings.args[file].additional_args[index] = value;
-									this.plugin.saveSettings();
-								});
-						});
-					new Setting(containerEl)
-						.setName(`Description for Arg ${i + 3}`)
-						.addText((area) => {
-							const index = i;
-							area
-								.setPlaceholder('Enter Description')
-								.setValue(this.plugin.settings.args[file].additional_args_desc[index])
-								.onChange((value) => {
-									this.plugin.settings.args[file].additional_args_desc[index] = value;
 									this.plugin.saveSettings();
 								});
 						});
@@ -452,18 +436,6 @@ class PythonScripterSettingTab extends PluginSettingTab {
 								});
 						});
 					new Setting(containerEl)
-						.setName(`Description for Arg ${i + 2}`)
-						.addText((area) => {
-							const index = i;
-							area
-								.setPlaceholder('Enter Description')
-								.setValue(this.plugin.settings.args[file].additional_args_desc[index])
-								.onChange((value) => {
-									this.plugin.settings.args[file].additional_args_desc[index] = value;
-									this.plugin.saveSettings();
-								});
-						});
-					new Setting(containerEl)
 						.setName(`Prompt User for Arg ${i + 2}`)
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 2}`)
 						.addToggle((area) => {
@@ -502,18 +474,6 @@ class PythonScripterSettingTab extends PluginSettingTab {
 								});
 						});
 					new Setting(containerEl)
-						.setName(`Description for Arg ${i + 2}`)
-						.addText((area) => {
-							const index = i;
-							area
-								.setPlaceholder('Enter Description')
-								.setValue(this.plugin.settings.args[file].additional_args_desc[index])
-								.onChange((value) => {
-									this.plugin.settings.args[file].additional_args_desc[index] = value;
-									this.plugin.saveSettings();
-								});
-						});
-					new Setting(containerEl)
 						.setName(`Prompt User for Arg ${i + 2}`)
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 2}`)
 						.addToggle((area) => {
@@ -543,18 +503,6 @@ class PythonScripterSettingTab extends PluginSettingTab {
 								});
 						});
 					new Setting(containerEl)
-						.setName(`Description for Arg ${i + 1}`)
-						.addText((area) => {
-							const index = i;
-							area
-								.setPlaceholder('Enter Description')
-								.setValue(this.plugin.settings.args[file].additional_args_desc[index])
-								.onChange((value) => {
-									this.plugin.settings.args[file].additional_args_desc[index] = value;
-									this.plugin.saveSettings();
-								});
-						});
-					new Setting(containerEl)
 						.setName(`Prompt User for Arg ${i + 1}`)
 						.setDesc(`Whether to prompt user for manual input for arg ${i + 1}`)
 						.addToggle((area) => {
@@ -581,14 +529,10 @@ class PythonScripterSettingTab extends PluginSettingTab {
 
 export class ModalForm extends Modal {
 	result: string;
-	additional_args: Args;
-	index: number;
 	onSubmit: (result: string) => void;
 
-	constructor(app: App, additional_args: Args, index: number, onSubmit: (result: string) => void) {
+	constructor(app: App, onSubmit: (result: string) => void) {
 		super(app);
-		this.additional_args = additional_args;
-		this.index = index;
 		this.onSubmit = onSubmit;
 	}
 
@@ -599,7 +543,6 @@ export class ModalForm extends Modal {
 
 		new Setting(contentEl)
 			.setName("Argument")
-			.setDesc(`${this.additional_args.additional_args_desc[this.index]}`)
 			.addText((text) =>
 				text.onChange((value) => {
 					this.result = value
