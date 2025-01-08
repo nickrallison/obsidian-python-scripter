@@ -32,15 +32,27 @@ export class ScriptSettingsTab extends PluginSettingTab {
     }
 
     async listFilesRecursive(dir: string): Promise<string[]> {
-        let results: string[] = [];
-        const items = await this.plugin.app.vault.adapter.list(dir);
-        this.plugin.log(`Reading directory: ${dir}`, 'silent');
-        results = results.concat(items.files);
-        for (const item of items.folders) {
-            this.plugin.log(`Recursive Reading directory: ${path.join(dir, item)}`, 'silent');
-            results = results.concat((await this.listFilesRecursive(path.join(dir, item))).map(file => path.join(item, file)));
+        try {
+            let results: string[] = [];
+            const items = await this.plugin.app.vault.adapter.list(dir);
+      
+            // Add all files from current directory
+            results = items.files.map((file) => {
+                // Convert absolute paths to relative paths from scripts folder
+                return file.replace(this.plugin.settings.scriptsFolder + "/", "");
+            });
+      
+            // Recursively process subdirectories
+            for (const folder of items.folders) {
+                const subResults = await this.listFilesRecursive(folder);
+                results = results.concat(subResults);
+            }
+      
+            return results;
+        } catch (error) {
+            this.plugin.log(`Error scanning directory ${dir}: ${error}`, "silent");
+            return [];
         }
-        return results;
     }
 
     async display(): Promise<void> {
@@ -64,15 +76,23 @@ export class ScriptSettingsTab extends PluginSettingTab {
                     });
             });
     
+
         new Setting(containerEl)
-            .setName('Scripts Folder')
-            .setDesc('Select the folder containing your scripts.')
-            .addText(text => {
-                text.setValue(this.plugin.settings.scriptsFolder)
+            .setName("Scripts Folder")
+            .setDesc("Select the folder containing your scripts.")
+            .addText((text) => {
+                text
+                    .setValue(this.plugin.settings.scriptsFolder)
                     .onChange(async (value) => {
+                        // Store the value but don't save yet
+                        text.inputEl.value = value;
+                    })
+                    .inputEl.addEventListener("blur", async () => {
+                        // Only save when the input loses focus
+                        const value = text.inputEl.value;
                         this.plugin.settings.scriptsFolder = value;
                         await this.plugin.saveSettings();
-                        new Notice('Scripts folder updated.');
+                        new Notice("Scripts folder updated.");
                         this.display(); // Refresh the settings tab
                     });
             });
