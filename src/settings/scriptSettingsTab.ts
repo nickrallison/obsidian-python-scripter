@@ -35,11 +35,12 @@ export class ScriptSettingsTab extends PluginSettingTab {
         try {
             let results: string[] = [];
             const items = await this.plugin.app.vault.adapter.list(dir);
-      
+            const scriptsFolder = path.join(this.plugin.app.vault.configDir, this.plugin.settings.scriptsFolder);
+
             // Add all files from current directory
             results = items.files.map((file) => {
                 // Convert absolute paths to relative paths from scripts folder
-                return file.replace(this.plugin.settings.scriptsFolder + "/", "");
+                return file.replace(scriptsFolder + "/", "");
             });
       
             // Recursively process subdirectories
@@ -99,6 +100,7 @@ export class ScriptSettingsTab extends PluginSettingTab {
     
         // Dropdown to add a new script
         const scripts = await this.listScripts();
+        this.plugin.log(`Scripts found: ${scripts}`, 'verbose');
         if (scripts.length > 0) {
             let selectedScript = '';
             new Setting(containerEl)
@@ -192,6 +194,9 @@ export class ScriptSettingsTab extends PluginSettingTab {
             }
             if (scriptConfig.arguments?.clipboard) {
                 args.push('"[clipboard contents]"');
+            }
+            if (scriptConfig.arguments?.highlight) {
+                args.push('"[highlighted contents]"');
             }
             if (scriptConfig.arguments?.predefined) {
                 for (const arg of scriptConfig.arguments.predefined) {

@@ -71,6 +71,17 @@ export class ScriptSettingsModal extends Modal {
                     });
             });
 
+        new Setting(contentEl)
+            .setName('Include Highlighted Contents')
+            .setDesc('Pass the highlighted text as an argument to the script.')
+            .addToggle(toggle => {
+                toggle.setValue(this.scriptConfig.arguments?.highlight || false)
+                    .onChange(value => {
+                        if (!this.scriptConfig.arguments) this.scriptConfig.arguments = {};
+                        this.scriptConfig.arguments.highlight = value;
+                    });
+            });
+
         // Predefined Arguments
         this.predefinedArgsContainer = contentEl.createEl('div');
         this.predefinedArgsContainer.createEl('h3', { text: 'Predefined Arguments' });
@@ -87,20 +98,6 @@ export class ScriptSettingsModal extends Modal {
                     .onChange(value => {
                         if (!this.scriptConfig.arguments) this.scriptConfig.arguments = {};
                         this.scriptConfig.arguments.promptArgumentCount = parseInt(value) || 0;
-                    });
-            });
-
-        // Communication settings
-        new Setting(contentEl)
-            .setName('Communication')
-            .setDesc('Choose the communication method between the script and Obsidian.')
-            .addDropdown(dropdown => {
-                dropdown
-                    .addOption('socket', 'Socket')
-                    .addOption('std', 'Standard I/O')
-                    .setValue(this.scriptConfig.communication || 'std')
-                    .onChange(value => {
-                        this.scriptConfig.communication = value as 'socket' | 'std';
                     });
             });
 

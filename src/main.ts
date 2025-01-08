@@ -83,6 +83,7 @@ export default class ScriptRunnerPlugin extends Plugin {
 
             // Add command for each script
             if (scriptConfig.runType === 'command') {
+                this.log(`Adding command for script: ${scriptPath}`, 'verbose');
                 this.addCommand({
                     id: `run-script-${scriptPath}`,
                     name: `Run Script: ${scriptPath}`,
@@ -95,6 +96,7 @@ export default class ScriptRunnerPlugin extends Plugin {
 
             // Add ribbon icon for each script
             if (scriptConfig.runType === 'icon') {
+                this.log(`Adding ribbon icon for script: ${scriptPath}`, 'verbose');
                 const icon = this.addRibbonIcon('play', `Run Script: ${scriptPath}`, async () => {
                     const args = await this.promptForArguments(scriptConfig);
                     this.scriptManager.runScript(scriptPath, scriptConfig, args);
@@ -119,6 +121,37 @@ export default class ScriptRunnerPlugin extends Plugin {
 
     async promptForArguments(scriptConfig: ScriptSettings): Promise<string[]> {
         const args: string[] = [];
+
+        // add current file path argument
+        if (scriptConfig.arguments?.currentFile) {
+            var local_current_file_path = this.app.workspace.getActiveFile()?.path?.toString();
+            if (!(local_current_file_path === undefined)) {
+                args.push(local_current_file_path);
+            } else {
+                args.push("");
+            }
+        }
+
+        // add vault path argument
+        if (scriptConfig.arguments?.vaultPath) {
+            args.push(this.getBasePath());
+        }
+
+        // add clipboard contents argument
+        if (scriptConfig.arguments?.clipboard) {
+            args.push(await navigator.clipboard.readText());
+        }
+
+        // add highlighted contents argument
+        if (scriptConfig.arguments?.highlight) {
+            const editor = this.app.workspace.activeEditor?.editor;
+            if (editor) {
+                const selectedText = editor.getSelection();
+                args.push(selectedText || "");
+            } else {
+                args.push("");
+            }
+        }
 
         // Add predefined arguments
         if (scriptConfig.arguments?.predefined) {
