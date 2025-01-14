@@ -8,7 +8,7 @@ export interface PluginSettings {
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
-    scriptsFolder: 'scripts',
+    scriptsFolder: '.obsidian/scripts',
     scripts: {},
     verbosity: 'normal',
 };
