@@ -15,7 +15,7 @@ export class ScriptSettingsTab extends PluginSettingTab {
 
     // Method to list scripts in the directory
     async listScripts(): Promise<string[]> {
-        const scriptsFolder = path.join(this.plugin.app.vault.configDir, this.plugin.settings.scriptsFolder);
+        const scriptsFolder = path.join(this.plugin.settings.scriptsFolder);
         // if the directory is an absolute path, print an error and return an empty array
         if (path.isAbsolute(this.plugin.settings.scriptsFolder)) {
             this.plugin.log(`Scripts directory path is absolute: ${this.plugin.settings.scriptsFolder}, change to local path`, 'silent');
@@ -26,6 +26,8 @@ export class ScriptSettingsTab extends PluginSettingTab {
             const items = await this.listFilesRecursive(scriptsFolder);
             return items;
         } catch (error) {
+            this.plugin.log(`Scripts directory: ${scriptsFolder}`, 'verbose');
+
             this.plugin.log(`Error reading directory: ${error}`, 'silent');
             return [];
         }
@@ -34,7 +36,8 @@ export class ScriptSettingsTab extends PluginSettingTab {
     async listFilesRecursive(dir: string): Promise<string[]> {
         try {
             let results: string[] = [];
-            const items = await this.plugin.app.vault.adapter.list(dir);
+            let dir_spaces_escaped = dir.replace(" ", "\ ");
+            const items = await this.plugin.app.vault.adapter.list(dir_spaces_escaped);
             const scriptsFolder = path.join(this.plugin.app.vault.configDir, this.plugin.settings.scriptsFolder);
 
             // Add all files from current directory

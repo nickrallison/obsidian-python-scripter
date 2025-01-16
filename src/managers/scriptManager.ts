@@ -28,11 +28,14 @@ export class ScriptManager {
             // Replace any unescaped quotes with escaped quotes
             return `"${arg.replace(/"/g, '\\"')}"`;
         });
-
+    
+        // Quote the script path to handle spaces
+        const quotedScriptPath = `"${scriptPath}"`;
+    
         let cmd = scriptConfig.interpreter
-            ? `${scriptConfig.interpreter} ${scriptPath} ${escapedArgs.join(' ')}`
-            : `${scriptPath} ${escapedArgs.join(' ')}`;
-
+            ? `"${scriptConfig.interpreter}" ${quotedScriptPath} ${escapedArgs.join(' ')}`
+            : `${quotedScriptPath} ${escapedArgs.join(' ')}`;
+    
         // check if command is executable
         this.plugin.log(`Running script: ${scriptPath}, with interpreter: ${interpreter}`, 'verbose');
         if (!this.isRunnable(interpreter, scriptPath)) {
@@ -45,11 +48,11 @@ export class ScriptManager {
             }
             return;
         }
-
+    
         if (this.settings.verbosity === 'verbose') {
             this.plugin.log(`Executing command: ${cmd}`, 'verbose');
         }
-
+    
         let scriptStartTime = Date.now();
         exec(cmd, (error, stdout, stderr) => {
             // Handle output based on scriptConfig.output
@@ -65,13 +68,13 @@ export class ScriptManager {
                     }
                 }
             }
-
+    
             // Handle errors
             if (error) {
                 new Notice('Error executing script.', 5000);
                 this.plugin.log('Error executing script:', "silent");
             }
-
+    
             const scriptEndTime = Date.now();
             const scriptDuration = scriptEndTime - scriptStartTime;
             new Notice(`Script executed successfully (took ${scriptDuration} ms), output: ${stdout}`, 5000);
