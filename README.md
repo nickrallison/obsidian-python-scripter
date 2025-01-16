@@ -93,3 +93,14 @@ You have the ability to change the default python script location in settings. A
 ## Debugging
 
 If your script fails to run. An error is shown in the top right of obsidian and in the *developer console* which can be found with the following  hotkeys: "ctrl" + "shift" + "i" on Windows, or "cmd" + "option" + "i" on MacOS.
+
+## 1.1.x Migration
+
+If you are upgrading the 1.1.x, the changes from 1.0.x are breaking. 
+- You can set the script base path in settings, but it must be from the root of the vault, .obsidian/scripts is default:
+![alt text](assets/scripts_folder_path.png)
+- You have to set the python interperter (or other interpreter manually for each script)
+![alt text](assets/interpreter.png)
+- You have to set the run method manually for each script
+![alt text](assets/run_type.png)
+

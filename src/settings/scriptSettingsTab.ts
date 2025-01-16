@@ -137,6 +137,7 @@ export class ScriptSettingsTab extends PluginSettingTab {
                                 new Notice(`Script "${selectedScript}" added.`);
                                 this.plugin.log(`Script "${selectedScript}" added to settings.`, 'verbose');
                                 this.display(); // Refresh the settings tab
+                                
                             } else {
                                 this.plugin.log(`Script "${selectedScript}" already exists in settings.`, 'verbose');
                             }
