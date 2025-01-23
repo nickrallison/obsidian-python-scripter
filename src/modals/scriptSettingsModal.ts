@@ -26,6 +26,17 @@ export class ScriptSettingsModal extends Modal {
         contentEl.empty(); // Clear the modal content
         contentEl.createEl('h2', { text: `Settings for ${this.scriptPath}` });
 
+        // Run Directory setting
+        new Setting(contentEl)
+            .setName('Run Directory')
+            .setDesc('Specify the directory relative to the vault root to run the script in. (Defaults to the vault root directory)')
+            .addText(text => {
+                text.setValue(this.scriptConfig.runDirectory || '')
+                    .onChange(value => {
+                        this.scriptConfig.runDirectory = value;
+                    });
+            });
+
         // Interpreter setting
         new Setting(contentEl)
             .setName('Interpreter')

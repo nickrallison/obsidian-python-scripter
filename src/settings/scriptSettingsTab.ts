@@ -42,6 +42,9 @@ export class ScriptSettingsTab extends PluginSettingTab {
                 // Convert absolute paths to relative paths from scripts folder
                 return file.replace(scriptsFolder + "/", "");
             });
+
+            // cut all .git folders
+            items.folders = items.folders.filter((folder) => !folder.includes('.git'));
       
             // Recursively process subdirectories
             for (const folder of items.folders) {
