@@ -56,7 +56,7 @@ export class ScriptManager {
         let scriptStartTime = Date.now();
         if (scriptConfig.runDirectory) {
             basePath = path.join(basePath, scriptConfig.runDirectory);
-        } 
+        }         
         process.chdir(basePath);
         console.log(`Running script: ${cmd} from ${basePath}`);
         exec(cmd, (error, stdout, stderr) => {

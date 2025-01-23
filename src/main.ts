@@ -20,6 +20,7 @@ export default class ScriptRunnerPlugin extends Plugin {
 
         // Dynamically add commands and ribbon icons for each script
         this.addScriptCommandsAndIcons();
+        this.refreshCommandsAndIcons();
     }
 
     onunload() {
