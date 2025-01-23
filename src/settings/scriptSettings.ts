@@ -1,6 +1,7 @@
 // src/settings/scriptSettings.ts
 export interface ScriptSettings {
     interpreter?: string;
+    runDirectory?: string;  // Directory to run the script in
     arguments?: {
         currentFile?: boolean; // Include current file path
         vaultPath?: boolean;   // Include vault path

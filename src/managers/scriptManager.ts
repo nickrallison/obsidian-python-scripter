@@ -54,6 +54,11 @@ export class ScriptManager {
         }
     
         let scriptStartTime = Date.now();
+        if (scriptConfig.runDirectory) {
+            basePath = path.join(basePath, scriptConfig.runDirectory);
+        } 
+        process.chdir(basePath);
+        console.log(`Running script: ${cmd} from ${basePath}`);
         exec(cmd, (error, stdout, stderr) => {
             // Handle output based on scriptConfig.output
             if (scriptConfig.output?.type === 'notice') {
@@ -117,8 +122,6 @@ export class ScriptManager {
 
     private isExecutable(filePath: string): boolean {
         try {
-            // Check if the file exists
-            fs.accessSync(filePath, fs.constants.F_OK);
             // On Windows, check if the file has an executable extension
             if (process.platform === 'win32') {
                 const executableExtensions = ['.exe', '.bat', '.cmd'];
@@ -128,8 +131,10 @@ export class ScriptManager {
                     return false;
                 }
             }
-            // Check if the file is executable
-            fs.accessSync(filePath, fs.constants.X_OK);
+            if (process.platform !== 'win32') {
+                // On Unix-based systems, check if the file has the executable permission
+                fs.accessSync(filePath, fs.constants.F_OK | fs.constants.X_OK);
+            }
             return true;
         } catch (error) {
             // If the file doesn't exist, check if it's in the PATH

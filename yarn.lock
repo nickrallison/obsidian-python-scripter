@@ -18,10 +18,15 @@
     style-mod "^4.1.0"
     w3c-keyname "^2.2.4"
 
-"@esbuild/darwin-arm64@0.17.3":
+"@esbuild/linux-x64@0.17.3":
   version "0.17.3"
-  resolved "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.17.3.tgz"
-  integrity sha512-01Hxaaat6m0Xp9AXGM8mjFtqqwDjzlMP0eQq9zll9U85ttVALGCGDuEvra5Feu/NbP5AEP1MaopPwzsTcUq1cw==
+  resolved "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.17.3.tgz"
+  integrity sha512-0AGkWQMzeoeAtXQRNB3s4J1/T2XbigM2/Mn2yU1tQSmQRmHIZdkGbVq2A3aDdNslPyhb9/lH0S5GMTZ4xsjBqg==
+
+"@esbuild/win32-x64@0.17.3":
+  version "0.17.3"
+  resolved "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.17.3.tgz"
+  integrity sha512-FdVl64OIuiKjgXBjwZaJLKp0eaEckifbhn10dXWhysMJkWblg3OEEGKSIyhiD5RSgAya8WzP3DNkngtIg3Nt7g==
 
 "@eslint-community/eslint-utils@^4.2.0":
   version "4.4.1"
