@@ -1,5 +1,9 @@
 # Obsidian Python Scripter
 
+## Archived
+
+Use [obsidian-shellcommand](https://github.com/Taitava/obsidian-shellcommands) instead
+
 ## Summary 
 
 This is a program to quickly allow you to run your own Python scripts from inside Obsidian. To get started enable this plugin, it will create a scripts/python folder inside your designated .obsidian folder. For each script it will add a custom command to the obsidian commands panel.
